@@ -184,8 +184,6 @@ class Graph():
             checkindex = len(self.points)
         # find the same point and delete in canvas
         for i in range(0, checkindex):
-            print(f'i = {i}')
-            x, y = point
             if (point == self.points[i]):
                 # delete the point in the canvas
                 print(f'delete point: {point}: {self.points_id[i]}')
@@ -196,6 +194,8 @@ class Graph():
         # add the point in the canvas
         point_id = self.canvas.create_oval(point[0] - 3, point[1] - 3, point[0] + 3, point[1] + 3, fill=color)
         self.points.append((point[0], point[1]))
+        if (test):
+            print(f"add point: {point}: {point_id}")
         self.points_id.append(point_id)
 
     # clear all points and lines
@@ -246,22 +246,9 @@ class Graph():
     def add_perpendicular_line(self, point1, point2):
         x1, y1 = point1
         x2, y2 = point2
-        # calculate the slope
-        if (x1 == x2):
-            slope = None
-        else:
-            slope = (y2 - y1) / (x2 - x1)
-        # calculate the middle point
         mid_x = (x1 + x2) / 2
         mid_y = (y1 + y2) / 2
-        # calculate the perpendicular slope
-        if (slope == None):
-            perp_slope = 0
-        elif (slope == 0):
-            perp_slope = None
-        else:
-            perp_slope = -1 / slope
-        # calculate the perpendicular line and make the line longer to touch the border of the canvas
+        perp_slope, b = self.find_perpendicular_line(point1, point2)
         if (perp_slope == None):
             self.canvas.create_line(mid_x, 0, mid_x, self.length, fill="blue", tags="line")
         elif (perp_slope == 0):
@@ -273,6 +260,40 @@ class Graph():
             x2 = self.width
             y2 = perp_slope * x2 + b
             self.canvas.create_line(x1, y1, x2, y2, fill="blue", tags="line")
+        
+    # find the perpendicular line
+    def find_perpendicular_line(self, point1, point2):
+        # return slope and b
+        x1, y1 = point1
+        x2, y2 = point2
+        # calculate the slope
+        if (y1 == y2):
+            slope = None
+        else:
+            slope = -(x2 - x1) / (y2 - y1)
+        # calculate the middle point
+        mid_x = (x1 + x2) / 2
+        mid_y = (y1 + y2) / 2
+        # calculate the perpendicular slope
+        if (slope == None):
+            b = mid_x
+        elif (slope == 0):
+            b = mid_y
+        else:
+            b = mid_y - slope * mid_x
+        return slope, b
+    
+    # use slope and point to find another point
+    def lineOtherPoint(self, point, line_slope, line_b):
+        x, y = point
+        if (line_slope == None):
+            return (x+1, 0)
+        elif (line_slope == 0):
+            return (0, y+1)
+        else:
+            new_x = x+1
+            new_y = line_slope * new_x + line_b
+            return (new_x, new_y)
 
 # calculate---------------------------------------------------------------------------------------------------------------
 class voronoi():
@@ -286,24 +307,93 @@ class voronoi():
         elif (len(self.graph.points) == 2):
             self.graph.add_perpendicular_line(self.graph.points[0], self.graph.points[1])
         elif (len(self.graph.points) == 3):
-            # 找出三點共線
+            # 找出三點共線 # TODO a,b 例外處理, almost done
             a, b = self.find_line(self.graph.points[0], self.graph.points[1])
+            a1, b1 = self.find_line(self.graph.points[0], self.graph.points[2])
             if (test and test_index <= 1):
-                print(f' y = {a}x + {b}')
-            if (a == None and ( self.graph.points[0][0] == self.graph.points[2][0] or self.graph.points[1][0] == self.graph.points[2][0] )):
+                print(f'compute_voronoi_first: y = {a} x + {b}; y = {a1} x + {b1}')
+            # 三點共線
+            if (a == None and a1 == None):
                 if (test and test_index <= 1):
                     print("三點共線")
-                if (self.graph.points[0][1] < self.graph.points[1][1] < self.graph.points[2][1] or self.graph.points[0][0] > self.graph.points[1][0] > self.graph.points[2][0]):
+                if ((self.graph.points[0][1] < self.graph.points[1][1] and self.graph.points[1][1] < self.graph.points[2][1]) or (self.graph.points[0][0] > self.graph.points[1][0] and self.graph.points[1][0] > self.graph.points[2][0])):
+                    print(f'{self.graph.points[0][1]} < {self.graph.points[1][1]} < {self.graph.points[2][1]} or {self.graph.points[0][0]} > {self.graph.points[1][0]} > {self.graph.points[2][0]}')
                     center = 1
-                elif (self.graph.points[1][1] < self.graph.points[0][1] < self.graph.points[2][1] or self.graph.points[1][0] > self.graph.points[0][0] > self.graph.points[2][0]):
+                elif ((self.graph.points[1][1] < self.graph.points[0][1] and self.graph.points[0][1] < self.graph.points[2][1]) or (self.graph.points[1][0] > self.graph.points[0][0] and self.graph.points[0][0] > self.graph.points[2][0])):
+                    print(f'{self.graph.points[1][1]} < {self.graph.points[0][1]} < {self.graph.points[2][1]} or {self.graph.points[1][0]} > {self.graph.points[0][0]} > {self.graph.points[2][0]}')
                     center = 0
                 else:
+                    print(f'{self.graph.points[2][1]} < {self.graph.points[0][1]} < {self.graph.points[1][1]} or {self.graph.points[2][0]} > {self.graph.points[0][0]} > {self.graph.points[1][0]}')
                     center = 2
                 # 畫出中垂線
                 for i in range(3):
                     if (i != center):
                         self.graph.add_perpendicular_line(self.graph.points[center], self.graph.points[i])
-            elif (self.graph.points[2][1] == a * self.graph.points[2][0] + b):
+            elif (a == a1):
+                if (test and test_index <= 1):
+                    print("三點共線-非垂直")
+                if ((self.graph.points[0][1] < self.graph.points[1][1] and self.graph.points[1][1] < self.graph.points[2][1]) or 
+                    (self.graph.points[0][1] > self.graph.points[1][1] and self.graph.points[1][1] > self.graph.points[2][1]) or 
+                    (self.graph.points[0][0] > self.graph.points[1][0] and self.graph.points[1][0] > self.graph.points[2][0]) or
+                    (self.graph.points[0][0] < self.graph.points[1][0] and self.graph.points[1][0] < self.graph.points[2][0])):
+
+                    print(f'case1: {self.graph.points[0][1]} < {self.graph.points[1][1]} < {self.graph.points[2][1]} or {self.graph.points[0][0]} > {self.graph.points[1][0]} > {self.graph.points[2][0]}')
+                    center = 1
+                elif ((self.graph.points[1][1] < self.graph.points[0][1] and self.graph.points[0][1] < self.graph.points[2][1]) or 
+                      (self.graph.points[1][1] > self.graph.points[0][1] and self.graph.points[0][1] > self.graph.points[2][1]) or
+                      (self.graph.points[1][0] > self.graph.points[0][0] and self.graph.points[0][0] > self.graph.points[2][0]) or
+                      (self.graph.points[1][0] < self.graph.points[0][0] and self.graph.points[0][0] < self.graph.points[2][0])):
+                    
+                    print(f'case2: {self.graph.points[1][1]} < {self.graph.points[0][1]} < {self.graph.points[2][1]} or {self.graph.points[1][0]} > {self.graph.points[0][0]} > {self.graph.points[2][0]}')
+                    center = 0
+                elif ((self.graph.points[2][1] < self.graph.points[0][1] and self.graph.points[0][1] < self.graph.points[1][1]) or 
+                      (self.graph.points[2][1] > self.graph.points[0][1] and self.graph.points[0][1] > self.graph.points[1][1]) or
+                      (self.graph.points[2][0] > self.graph.points[0][0] and self.graph.points[0][0] > self.graph.points[1][0]) or
+                      (self.graph.points[2][0] < self.graph.points[0][0] and self.graph.points[0][0] < self.graph.points[1][0])):
+                    
+                    print(f'case3: {self.graph.points[2][1]} < {self.graph.points[0][1]} < {self.graph.points[1][1]} or {self.graph.points[2][0]} > {self.graph.points[0][0]} > {self.graph.points[1][0]}')
+                    center = 2
+                else:
+                    print('compute_voronoi_first 三點共線: error')
+                    print(self.graph.points)
+                    
+                # 畫出中垂線
+                for i in range(3):
+                    if (i != center):
+                        self.graph.add_perpendicular_line(self.graph.points[center], self.graph.points[i])
+        # Old method
+            # # 畫出垂直線
+            # if (a == None and a1 == None):
+            #     if (self.graph.points[0][0] == self.graph.points[2][0]):
+            #         if (test and test_index <= 1):
+            #             print("三點共線")
+            #         if (self.graph.points[0][1] < self.graph.points[1][1] < self.graph.points[2][1] or self.graph.points[0][0] > self.graph.points[1][0] > self.graph.points[2][0]):
+            #             center = 1
+            #         elif (self.graph.points[1][1] < self.graph.points[0][1] < self.graph.points[2][1] or self.graph.points[1][0] > self.graph.points[0][0] > self.graph.points[2][0]):
+            #             center = 0
+            #         else:
+            #             center = 2
+            #         # 畫出中垂線
+            #         for i in range(3):
+            #             if (i != center):
+            #                 self.graph.add_perpendicular_line(self.graph.points[center], self.graph.points[i])
+            # elif (a == a1):
+            #     if (test and test_index <= 1):
+            #         print("三點共線-非垂直")
+            #     if (self.graph.points[0][1] < self.graph.points[1][1] < self.graph.points[2][1] or self.graph.points[0][0] > self.graph.points[1][0] > self.graph.points[2][0]):
+            #         print("0 1 2")
+            #         center = 1
+            #     elif (self.graph.points[1][1] < self.graph.points[0][1] < self.graph.points[2][1] or self.graph.points[1][0] > self.graph.points[0][0] > self.graph.points[2][0]):
+            #         print("1 0 2")
+            #         center = 0
+            #     else:
+            #         print("2 0 1")
+            #         center = 2
+            #     # 畫出中垂線
+            #     for i in range(3):
+            #         if (i != center):
+            #             self.graph.add_perpendicular_line(self.graph.points[center], self.graph.points[i])
+            elif ( self.graph.points[2][1] == a * self.graph.points[2][0] + b): # TODO a,b 例外處理, a==0 BUG
                 if (test and test_index <= 1):
                     print("三點共線")
                 # 找出中間的點
@@ -332,33 +422,14 @@ class voronoi():
                 for edge in drawEdges:
                     self.graph.add_line(edge[0], edge[1], edge[2])
 
-    # 找三角形的外心
+    # 找三角形的外心 : a, b, c: 三角形的三個頂點 ; 回傳: 外心的座標
     def circumcenter(self, a, b, c):
-        # a, b, c: 三角形的三個頂點 ; 回傳: 外心的座標 # TODO : 有兩點垂直或水平的情況
-        x1, y1 = a
-        x2, y2 = b
-        x3, y3 = c
-        
-        # 計算外心的分母 d
-        d = 2 * (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2))
-        
-        # 檢查是否三點共線
-        if d == 0:
-            print("三點共線，無法確定外心")
-            return None  # 若共線則無法定義外心
-
-        # 計算外心的座標 x, y
-        x = ((x1 ** 2 + y1 ** 2) * (y2 - y3) + (x2 ** 2 + y2 ** 2) * (y3 - y1) + (x3 ** 2 + y3 ** 2) * (y1 - y2)) / d
-        y = ((x1 ** 2 + y1 ** 2) * (x3 - x2) + (x2 ** 2 + y2 ** 2) * (x1 - x3) + (x3 ** 2 + y3 ** 2) * (x2 - x1)) / d
-
-        # 若 a, b, c 中有垂直或水平的邊，可進行額外處理
-        # 例如判斷是否有兩點 y 相同 (水平) 或 x 相同 (垂直) 的情況
-        if y1 == y2 or y2 == y3 or y1 == y3:
-            print("檢測到水平邊")
-        if x1 == x2 or x2 == x3 or x1 == x3:
-            print("檢測到垂直邊")
-        
-        return (x, y)
+        # 找出ab及bc的中垂線
+        a_ab, b_ab = self.graph.find_perpendicular_line(a, b)
+        a_bc, b_bc = self.graph.find_perpendicular_line(b, c)
+        # 透過中垂線找出外心
+        x, y = self.find_intersection(a_ab, b_ab, a_bc, b_bc)
+        return x, y
 
     # 找兩點的中點
     def midpoint(self, a, b):
@@ -379,8 +450,8 @@ class voronoi():
         # a, b: 兩個點的座標 ; 回傳: 直線的斜率 a 和截距 b
         x1, y1 = a
         x2, y2 = b
-        if (x1 == x2):
-            print('find_line() error: x1 == x2, cannot find line')
+        if (a == b):
+            print('find_line() error: a == b, cannot find line')
             return None, None
         else:
             if (x1 == x2):
@@ -392,11 +463,11 @@ class voronoi():
             return a, b
 
     # 透過兩條線找出交點
-    def find_intersection(self, a1, b1, a2, b2):
-        # TODO : 有兩點垂直或水平的情況, ondo, almost done
+    def find_intersection(self, a1, b1, a2, b2): # TODO checkout, almost done
         # a1, b1: 第一條線的斜率和截距
         # a2, b2: 第二條線的斜率和截距
         # 回傳: 兩條線的交點
+
         if (a1 == a2):
             if (b1 == b2):
                 print('find_intersection() error: 兩條線重合')
@@ -641,13 +712,10 @@ class UiApp:
                 print()
 
 
-
-
 # main---------------------------------------------------------------------------------------------------------------
 
-
 test = True
-test_index = 1
+test_index = 0
 
 if __name__ == "__main__":
     # 設定長寬
