@@ -78,7 +78,6 @@ class Graph():
             elif (edge_status==[1,1,1]):
                 dy1 = maxsize
                 dy2 = -maxsize
-                
         elif (slope == 0): # 畫出水平線
             dy1 = dy2 = y1
             if   (edge_status==[0,0,1]):
@@ -156,26 +155,62 @@ class Graph():
                 dy2 = slope * dx2 + b
 
         # 檢查線是否在畫布上，若有則裁切成畫布範圍，若無則不畫
-        if (dx1 < 0): # TODO slope = none
-            dx1 = 0
-            dy1 = slope * dx1 + b
-        elif (dx1 > self.width):
-            dx1 = self.width
-            dy1 = slope * dx1 + b
-        if (dx2 < 0):
-            dx2 = 0
-            dy2 = slope * dx2 + b
-        elif (dx2 > self.width):
-            dx2 = self.width
-            dy2 = slope * dx2 + b
+# TODO slope = none
+    # New method
+        if slope is None:  # 處理垂直線的邊界
+            if dy1 < 0:
+                dy1 = 0
+            elif dy1 > self.length:
+                dy1 = self.length
+            if dy2 < 0:
+                dy2 = 0
+            elif dy2 > self.length:
+                dy2 = self.length
+        else:
+            if dx1 < 0:
+                dx1 = 0
+                dy1 = slope * dx1 + b
+            elif dx1 > self.width:
+                dx1 = self.width
+                dy1 = slope * dx1 + b
+            if dx2 < 0:
+                dx2 = 0
+                dy2 = slope * dx2 + b
+            elif dx2 > self.width:
+                dx2 = self.width
+                dy2 = slope * dx2 + b
+
         # 畫線
         self.canvas.create_line(dx1, dy1, dx2, dy2, fill="blue", tags="line")
         self.edges.append((dx1, dy1, dx2, dy2, point1, point2, edge_status))
-        if (test and test_index >= 1):
+        
+        if test and test_index >= 1:
             print(f"({dx1}, {dy1}), ({dx2}, {dy2})")
             print(f"({point1[0]}, {point1[1]}), ({point2[0]}, {point2[1]})")
             print(edge_status)
             print()
+
+    # Old method
+        # if (dx1 < 0):
+        #     dx1 = 0
+        #     dy1 = slope * dx1 + b
+        # elif (dx1 > self.width):
+        #     dx1 = self.width
+        #     dy1 = slope * dx1 + b
+        # if (dx2 < 0):
+        #     dx2 = 0
+        #     dy2 = slope * dx2 + b
+        # elif (dx2 > self.width):
+        #     dx2 = self.width
+        #     dy2 = slope * dx2 + b
+        # # 畫線
+        # self.canvas.create_line(dx1, dy1, dx2, dy2, fill="blue", tags="line")
+        # self.edges.append((dx1, dy1, dx2, dy2, point1, point2, edge_status))
+        # if (test and test_index >= 1):
+        #     print(f"({dx1}, {dy1}), ({dx2}, {dy2})")
+        #     print(f"({point1[0]}, {point1[1]}), ({point2[0]}, {point2[1]})")
+        #     print(edge_status)
+        #     print()
 
 
     # add a point to the graph
@@ -357,52 +392,6 @@ class voronoi():
                     print('compute_voronoi_first 三點共線: error')
                     print(self.graph.points)
                     
-                # 畫出中垂線
-                for i in range(3):
-                    if (i != center):
-                        self.graph.add_perpendicular_line(self.graph.points[center], self.graph.points[i])
-        # Old method
-            # # 畫出垂直線
-            # if (a == None and a1 == None):
-            #     if (self.graph.points[0][0] == self.graph.points[2][0]):
-            #         if (test and test_index <= 1):
-            #             print("三點共線")
-            #         if (self.graph.points[0][1] < self.graph.points[1][1] < self.graph.points[2][1] or self.graph.points[0][0] > self.graph.points[1][0] > self.graph.points[2][0]):
-            #             center = 1
-            #         elif (self.graph.points[1][1] < self.graph.points[0][1] < self.graph.points[2][1] or self.graph.points[1][0] > self.graph.points[0][0] > self.graph.points[2][0]):
-            #             center = 0
-            #         else:
-            #             center = 2
-            #         # 畫出中垂線
-            #         for i in range(3):
-            #             if (i != center):
-            #                 self.graph.add_perpendicular_line(self.graph.points[center], self.graph.points[i])
-            # elif (a == a1):
-            #     if (test and test_index <= 1):
-            #         print("三點共線-非垂直")
-            #     if (self.graph.points[0][1] < self.graph.points[1][1] < self.graph.points[2][1] or self.graph.points[0][0] > self.graph.points[1][0] > self.graph.points[2][0]):
-            #         print("0 1 2")
-            #         center = 1
-            #     elif (self.graph.points[1][1] < self.graph.points[0][1] < self.graph.points[2][1] or self.graph.points[1][0] > self.graph.points[0][0] > self.graph.points[2][0]):
-            #         print("1 0 2")
-            #         center = 0
-            #     else:
-            #         print("2 0 1")
-            #         center = 2
-            #     # 畫出中垂線
-            #     for i in range(3):
-            #         if (i != center):
-            #             self.graph.add_perpendicular_line(self.graph.points[center], self.graph.points[i])
-            elif ( self.graph.points[2][1] == a * self.graph.points[2][0] + b): # TODO a,b 例外處理, a==0 BUG
-                if (test and test_index <= 1):
-                    print("三點共線")
-                # 找出中間的點
-                if   ((self.graph.points[0][0] > self.graph.points[1][0] > self.graph.points[2][0]) or (self.graph.points[0][0] < self.graph.points[1][0] < self.graph.points[2][0])):
-                    center = 1
-                elif ((self.graph.points[1][0] > self.graph.points[0][0] > self.graph.points[2][0]) or (self.graph.points[1][0] < self.graph.points[0][0] < self.graph.points[2][0])):
-                    center = 0
-                else :
-                    center = 2
                 # 畫出中垂線
                 for i in range(3):
                     if (i != center):
@@ -719,8 +708,8 @@ test_index = 0
 
 if __name__ == "__main__":
     # 設定長寬
-    length = 800
-    width = 800
+    length = 600
+    width = 600
     root = tk.Tk()
     app = UiApp(root, length, width)
     root.mainloop()
