@@ -223,8 +223,10 @@ class Graph():
                     # self.canvas.delete(c_twoToOne)
 
     # clear all lines
-    def clear_lines():
-        pass
+    def clear_lines(self):
+        self.edges_id.clear()
+        self.edges.clear()
+        self.canvas.delete("line")
     # find a line by two points
     def find_line():
         pass
@@ -601,6 +603,10 @@ class UiApp:
         self.writefile_button = tk.Button(master, text="Write File", command=self.writeFile)
         self.writefile_button.pack(side="top")
 
+        # 建立「Read OutputFile」按鈕
+        self.readoutputfile_button = tk.Button(master, text="Read OutputFile", command=self.readGraph)
+        self.readoutputfile_button.pack(side="top")
+
         # 建立「Clear」按鈕
         self.clear_button = tk.Button(master, text="Clear", command=self.clear)
         self.clear_button.pack(side="top")
@@ -622,6 +628,8 @@ class UiApp:
 
     def run(self):
         """當點擊 Run 按鈕時，繪製連線。"""
+        self.graph.clear_lines()
+        self.master.update() # 更新畫布
         self.voronoi_diagram.compute_voronoi_first()
         self.master.update() # 更新畫布
         
@@ -687,7 +695,15 @@ class UiApp:
                 file.write('L ')
                 file.write(f"{round(edge[0][0],1)} {round(edge[0][1], 1)} {round(edge[1][0], 1)} {round(edge[1][1], 1)}\n")
 
-        
+    def readGraph(self):
+        self.graph.clear_all()
+        file_path = filedialog.askopenfilename(
+            title="選擇文件",
+            filetypes=(("文本文件", "*.txt"), ("所有文件", "*.*"))  # 設定文件類型過濾
+        )
+        if file_path:
+            self.operate_output(file_path)
+            self.master.update()
     
     def nextGraph(self):
         self.graph.clear_all()
@@ -734,7 +750,7 @@ class UiApp:
                     line = file.readline()
                     while ( line and (line.strip() == "" or line.strip().startswith("#"))):
                         line = file.readline()  # 跳到下一行
-                    x, y = map(int, line.split())
+                    x, y = map(float, line.split())
                     points.append((x, y))
                     if (test and test_index == 0):
                         print(f"({x}, {y})")
@@ -754,6 +770,29 @@ class UiApp:
                 for x, y in points:
                     print(f"({x}, {y})")
                 print()
+    def operate_output(self, file_path):
+        # P 226 143
+        # P 322 144
+        # L 269.2 600 275.5 0
+        # operate upper line and store in points and edges
+        self.graph.clear_all()
+        with open(file_path, "r", encoding="utf-8") as file:
+            while True:
+                line = file.readline()
+                if not line:
+                    break
+                if (line.startswith("P")):
+                    x, y = map(float, line[2:].split())
+                    self.graph.add_point((x, y), 'red', len(self.graph.points))
+                elif (line.startswith("L")):
+                    x1, y1, x2, y2 = map(float, line[2:].split())
+                    self.graph.add_line((x1, y1), (x2, y2), [0,1,0])
+                else:
+                    print("operate_output error")
+                    break
+
+
+
 
 
 # main---------------------------------------------------------------------------------------------------------------
