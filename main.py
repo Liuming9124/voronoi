@@ -1,3 +1,5 @@
+# $LAN=PYTHON$
+
 import tkinter as tk
 from tkinter import filedialog
 import math
@@ -274,7 +276,7 @@ class Graph():
             if (tx2 >= 0 and tx2 <= self.length):
                 x2 = tx2
                 y2 = self.width
-        if (y2 < 0):
+        elif (y2 < 0):
             tx2 = (-line_b) / line_a
             if (tx2 >= 0 and tx2 <= self.length):
                 x2 = tx2
@@ -690,7 +692,7 @@ class UiApp:
         with open('./result.txt', "w") as file:
             for point in tmpPoints:
                 file.write('P ')
-                file.write(f"{point[0]} {point[1]}\n")
+                file.write(f"{int(point[0])} {int(point[1])}\n")
             for edge in tmpEdges:
                 file.write('E ')
                 file.write(f"{round(edge[0][0],1)} {round(edge[0][1], 1)} {round(edge[1][0], 1)} {round(edge[1][1], 1)}\n")
