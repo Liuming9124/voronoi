@@ -27,7 +27,7 @@ class Graph():
                                         # edge_status = (left, mid, right)  # left=1 : <-1 2, mid=1 : 1-2, right=1 : 1 2->
 
     # add a line to the graph
-    def add_line(self, point1, point2, edge_status): # edge_status = (left, mid, right) -> left=1 : <-1 2, mid=1 : 1-2, right=1 : 1 2->
+    def add_line(self, point1, point2, edge_status): # edge_status = (left, mid, right) -> left=1 : <-1 2, mid=1 : 1-2, right=1 : 1 2-> ; excaption [0,0,0] means perpendicular line
         # 原始的兩點
         x1, y1 = point1
         x2, y2 = point2
@@ -78,38 +78,6 @@ class Graph():
             elif (edge_status==[1,1,1]):
                 dy1 = maxsize
                 dy2 = -maxsize
-        elif (slope == 0): # 畫出水平線
-            dy1 = dy2 = y1
-            if   (edge_status==[0,0,1]):
-                dx1 = x2
-                if (x1 < x2):
-                    dx2 = maxsize
-                else:
-                    dx2 = -maxsize
-            elif (edge_status==[0,1,0]):
-                dx1 = x1
-                dx2 = x2
-            elif (edge_status==[0,1,1]):
-                dx1 = x1
-                if (x1 < x2):
-                    dx2 = maxsize
-                else:
-                    dx2 = -maxsize
-            elif (edge_status==[1,0,0]):
-                dx1 = x1
-                if (x1 < x2):
-                    dx2 = -maxsize
-                else:
-                    dx2 = maxsize
-            elif (edge_status==[1,1,0]):
-                dx1 = x2
-                if (x1 < x2):
-                    dx2 = -maxsize
-                else:
-                    dx2 = maxsize
-            elif (edge_status==[1,1,1]):
-                dx1 = maxsize
-                dx2 = -maxsize
         else:
             if   (edge_status==[0,0,1]):
                 dx1 = x2
@@ -155,63 +123,48 @@ class Graph():
                 dy2 = slope * dx2 + b
 
         # 檢查線是否在畫布上，若有則裁切成畫布範圍，若無則不畫
-# TODO slope = none
-    # New method
+        canvas_x1 = dx1
+        canvas_y1 = dy1
+        canvas_x2 = dx2
+        canvas_y2 = dy2
+
         if slope is None:  # 處理垂直線的邊界
             if dy1 < 0:
-                dy1 = 0
+                canvas_y1 = 0
             elif dy1 > self.length:
-                dy1 = self.length
+                canvas_y1 = self.length
             if dy2 < 0:
-                dy2 = 0
+                canvas_y2 = 0
             elif dy2 > self.length:
-                dy2 = self.length
+                canvas_y2 = self.length
         else:
             if dx1 < 0:
-                dx1 = 0
-                dy1 = slope * dx1 + b
+                canvas_x1 = 0
+                canvas_y1 = slope * canvas_x1 + b
             elif dx1 > self.width:
-                dx1 = self.width
-                dy1 = slope * dx1 + b
+                canvas_x1 = self.width
+                canvas_y1 = slope * canvas_x1 + b
             if dx2 < 0:
-                dx2 = 0
-                dy2 = slope * dx2 + b
+                canvas_x2 = 0
+                canvas_y2 = slope * canvas_x2 + b
             elif dx2 > self.width:
-                dx2 = self.width
-                dy2 = slope * dx2 + b
+                canvas_x2 = self.width
+                canvas_y2 = slope * canvas_x2 + b
+
+        canvasP = self.clip_line((canvas_x1, canvas_y1), (canvas_x2, canvas_y2), slope, b)
+        canvas_x1, canvas_y1 = canvasP[0]
+        canvas_x2, canvas_y2 = canvasP[1]
 
         # 畫線
-        self.canvas.create_line(dx1, dy1, dx2, dy2, fill="blue", tags="line")
-        self.edges.append((dx1, dy1, dx2, dy2, point1, point2, edge_status))
+        eID = self.canvas.create_line(canvas_x1, canvas_y1, canvas_x2, canvas_y2, fill="blue", tags="line")
+        self.edges_id.append(eID)
+        self.edges.append(((canvas_x1, canvas_y1), (canvas_x2, canvas_y2), point1, point2, (dx1, dy1), (dx2, dy2), edge_status))
         
         if test and test_index >= 1:
-            print(f"({dx1}, {dy1}), ({dx2}, {dy2})")
+            print(f"({canvas_x1}, {canvas_y1}), ({canvas_x2}, {canvas_y2})")
             print(f"({point1[0]}, {point1[1]}), ({point2[0]}, {point2[1]})")
             print(edge_status)
             print()
-
-    # Old method
-        # if (dx1 < 0):
-        #     dx1 = 0
-        #     dy1 = slope * dx1 + b
-        # elif (dx1 > self.width):
-        #     dx1 = self.width
-        #     dy1 = slope * dx1 + b
-        # if (dx2 < 0):
-        #     dx2 = 0
-        #     dy2 = slope * dx2 + b
-        # elif (dx2 > self.width):
-        #     dx2 = self.width
-        #     dy2 = slope * dx2 + b
-        # # 畫線
-        # self.canvas.create_line(dx1, dy1, dx2, dy2, fill="blue", tags="line")
-        # self.edges.append((dx1, dy1, dx2, dy2, point1, point2, edge_status))
-        # if (test and test_index >= 1):
-        #     print(f"({dx1}, {dy1}), ({dx2}, {dy2})")
-        #     print(f"({point1[0]}, {point1[1]}), ({point2[0]}, {point2[1]})")
-        #     print(edge_status)
-        #     print()
-
 
     # add a point to the graph
     def add_point(self, point, color='red', checkindex = -1):
@@ -254,8 +207,6 @@ class Graph():
                     slope = (point2[1] - point1[1]) / (point2[0] - point1[0])
                     if (slope == None):
                         pass
-                    elif (slope == 0):
-                        pass
                     else:
                         x_edge1, y_edge1 = self.edges[i]
                         x_edge2, y_edge2 = self.edges[i + 1]
@@ -277,6 +228,59 @@ class Graph():
     # find a line by two points
     def find_line():
         pass
+
+    # 裁切線段回傳畫布上兩端點
+    def clip_line(self, point1, point2, line_a, line_b):
+        x1, y1 = point1
+        x2, y2 = point2
+        
+        if (x1 > self.length):
+            ty1 = line_a * self.length + line_b
+            if (ty1 >= 0 and ty1 <= self.width):
+                x1 = self.length
+                y1 = ty1
+        elif (x1 < 0):
+            ty1 = line_a * 0 + line_b
+            if (ty1 >= 0 and ty1 <= self.width):
+                x1 = 0
+                y1 = ty1
+        
+        if (y1 > self.width):
+            tx1 = (self.width - line_b) / line_a
+            if (tx1 >= 0 and tx1 <= self.length):
+                x1 = tx1
+                y1 = self.width
+        elif (y1 < 0):
+            tx1 = (-line_b) / line_a
+            if (tx1 >= 0 and tx1 <= self.length):
+                x1 = tx1
+                y1 = 0
+        
+        if (x2 > self.length):
+            ty2 = line_a * self.length + line_b
+            if (ty2 >= 0 and ty2 <= self.width):
+                x2 = self.length
+                y2 = ty2
+        elif (x2 < 0):
+            ty2 = line_a * 0 + line_b
+            if (ty2 >= 0 and ty2 <= self.width):
+                x2 = 0
+                y2 = ty2
+        
+        if (y2 > self.width):
+            tx2 = (self.width - line_b) / line_a
+            if (tx2 >= 0 and tx2 <= self.length):
+                x2 = tx2
+                y2 = self.width
+        if (y2 < 0):
+            tx2 = (-line_b) / line_a
+            if (tx2 >= 0 and tx2 <= self.length):
+                x2 = tx2
+                y2 = 0
+            
+        return ([(x1, y1), (x2, y2)])
+
+
     # add a perpendicular line
     def add_perpendicular_line(self, point1, point2):
         x1, y1 = point1
@@ -285,16 +289,37 @@ class Graph():
         mid_y = (y1 + y2) / 2
         perp_slope, b = self.find_perpendicular_line(point1, point2)
         if (perp_slope == None):
-            self.canvas.create_line(mid_x, 0, mid_x, self.length, fill="blue", tags="line")
-        elif (perp_slope == 0):
-            self.canvas.create_line(0, mid_y, self.width, mid_y, fill="blue", tags="line")
+            dx1 = mid_x
+            dy1 = maxsize
+            dx2 = mid_x
+            dy2 = -maxsize
+
+            canvas_x1 = canvas_x2 = mid_x
+            canvas_y1 = 0
+            canvas_y2 = self.length
         else:
             b = mid_y - perp_slope * mid_x
-            x1 = 0
-            y1 = perp_slope * x1 + b
-            x2 = self.width
-            y2 = perp_slope * x2 + b
-            self.canvas.create_line(x1, y1, x2, y2, fill="blue", tags="line")
+
+            dx1 = maxsize
+            dy1 = perp_slope * dx1 + b
+            dx2 = -maxsize
+            dy2 = perp_slope * dx2 + b
+
+            canvas_x1 = 0
+            canvas_y1 = perp_slope * canvas_x1 + b
+            canvas_x2 = self.length
+            canvas_y2 = perp_slope * canvas_x2 + b
+        # canvasP = self.clip_line()
+        
+
+        # New method
+        canvasP = self.clip_line((canvas_x1, canvas_y1), (canvas_x2, canvas_y2), perp_slope, b)
+        canvas_x1, canvas_y1 = canvasP[0]
+        canvas_x2, canvas_y2 = canvasP[1]
+
+        eID = self.canvas.create_line(canvas_x1, canvas_y1, canvas_x2, canvas_y2, fill="blue", tags="line")
+        self.edges_id.append(eID)
+        self.edges.append(((canvas_x1, canvas_y1), (canvas_x2, canvas_y2), point1, point2, (dx1, dy1), (dx2, dy2), [1,1,1]))
         
     # find the perpendicular line
     def find_perpendicular_line(self, point1, point2):
@@ -312,8 +337,6 @@ class Graph():
         # calculate the perpendicular slope
         if (slope == None):
             b = mid_x
-        elif (slope == 0):
-            b = mid_y
         else:
             b = mid_y - slope * mid_x
         return slope, b
@@ -342,7 +365,7 @@ class voronoi():
         elif (len(self.graph.points) == 2):
             self.graph.add_perpendicular_line(self.graph.points[0], self.graph.points[1])
         elif (len(self.graph.points) == 3):
-            # 找出三點共線 # TODO a,b 例外處理, almost done
+            # 找出三點共線
             a, b = self.find_line(self.graph.points[0], self.graph.points[1])
             a1, b1 = self.find_line(self.graph.points[0], self.graph.points[2])
             if (test and test_index <= 1):
@@ -451,11 +474,10 @@ class voronoi():
                 b = y1 - a * x1
             return a, b
 
-    # 透過兩條線找出交點
-    def find_intersection(self, a1, b1, a2, b2): # TODO checkout, almost done
+    # 透過兩條線找出交點 回傳: 兩條線的交點
+    def find_intersection(self, a1, b1, a2, b2):
         # a1, b1: 第一條線的斜率和截距
         # a2, b2: 第二條線的斜率和截距
-        # 回傳: 兩條線的交點
 
         if (a1 == a2):
             if (b1 == b2):
@@ -567,9 +589,9 @@ class UiApp:
         self.next_button = tk.Button(master, text="NextGraph", command=self.nextGraph)
         self.next_button.pack(side="top")
 
-        # 建立「Step by Step」按鈕
-        self.stepbystep_button = tk.Button(master, text="Step by Step", command=self.stepbystep)
-        self.stepbystep_button.pack(side="top")
+        # # 建立「Step by Step」按鈕
+        # self.stepbystep_button = tk.Button(master, text="Step by Step", command=self.stepbystep)
+        # self.stepbystep_button.pack(side="top")
 
         # 建立「Read File」按鈕
         self.readfile_button = tk.Button(master, text="Read File", command=self.readFile)
@@ -595,6 +617,8 @@ class UiApp:
         self.graph = Graph(self.canvas, self.width, self.length)
         self.voronoi_diagram = voronoi(self.canvas, self.graph)
 
+    def get_voronoi_diagram(self):
+        return self.voronoi_diagram
 
     def run(self):
         """當點擊 Run 按鈕時，繪製連線。"""
@@ -614,8 +638,8 @@ class UiApp:
         if (test and test_index == 0):
             print(f"點紀錄於: ({x}, {y})")
 
-    def stepbystep(self):
-        pass
+    # def stepbystep(self):
+    #     pass
 
     def readFile(self):
         self.graph.inputCurrentIndex = 0
@@ -632,7 +656,38 @@ class UiApp:
 
     def writeFile(self):
         """write file to windows"""
-        pass
+        # Sorting
+        tmpPoints = self.graph.points
+        for i in range(0, len(tmpPoints)):
+            # 先排序x, 再排序y
+            for j in range(i+1, len(tmpPoints)):
+                if (tmpPoints[i][0] > tmpPoints[j][0]):
+                    tmpPoints[i], tmpPoints[j] = tmpPoints[j], tmpPoints[i]
+                elif (tmpPoints[i][0] == tmpPoints[j][0] and tmpPoints[i][1] > tmpPoints[j][1]):
+                    tmpPoints[i], tmpPoints[j] = tmpPoints[j], tmpPoints[i]
+        tmpEdges = self.graph.edges
+        for i in range(0, len(tmpEdges)):
+            # 先排序x, 再排序y
+            for j in range(i+1, len(tmpEdges)):
+                if (tmpEdges[i][0][0] > tmpEdges[j][0][0]):
+                    tmpEdges[i], tmpEdges[j] = tmpEdges[j], tmpEdges[i]
+                elif (tmpEdges[i][0][0] == tmpEdges[j][0][0] and tmpEdges[i][0][1] > tmpEdges[j][0][1]):
+                    tmpEdges[i], tmpEdges[j] = tmpEdges[j], tmpEdges[i]
+        if (test):
+            for i in range(0, len(tmpPoints)):
+                print(tmpPoints[i])
+            for i in range(0, len(tmpEdges)):
+                print(tmpEdges[i][0], tmpEdges[i][1])
+        # Write to file
+        with open('./result.txt', "w") as file:
+            for point in tmpPoints:
+                file.write('P ')
+                file.write(f"{point[0]} {point[1]}\n")
+            for edge in tmpEdges:
+                file.write('L ')
+                file.write(f"{round(edge[0][0],1)} {round(edge[0][1], 1)} {round(edge[1][0], 1)} {round(edge[1][1], 1)}\n")
+
+        
     
     def nextGraph(self):
         self.graph.clear_all()
@@ -703,8 +758,8 @@ class UiApp:
 
 # main---------------------------------------------------------------------------------------------------------------
 
-test = True
-test_index = 0
+test = False
+test_index = 1
 
 if __name__ == "__main__":
     # 設定長寬
