@@ -692,7 +692,7 @@ class UiApp:
                 file.write('P ')
                 file.write(f"{point[0]} {point[1]}\n")
             for edge in tmpEdges:
-                file.write('L ')
+                file.write('E ')
                 file.write(f"{round(edge[0][0],1)} {round(edge[0][1], 1)} {round(edge[1][0], 1)} {round(edge[1][1], 1)}\n")
 
     def readGraph(self):
@@ -784,7 +784,7 @@ class UiApp:
                 if (line.startswith("P")):
                     x, y = map(float, line[2:].split())
                     self.graph.add_point((x, y), 'red', len(self.graph.points))
-                elif (line.startswith("L")):
+                elif (line.startswith("E")):
                     x1, y1, x2, y2 = map(float, line[2:].split())
                     self.graph.add_line((x1, y1), (x2, y2), [0,1,0])
                 else:
