@@ -673,16 +673,22 @@ class UiApp:
             for j in range(i+1, len(tmpPoints)):
                 if (tmpPoints[i][0] > tmpPoints[j][0]):
                     tmpPoints[i], tmpPoints[j] = tmpPoints[j], tmpPoints[i]
-                elif (tmpPoints[i][0] == tmpPoints[j][0] and tmpPoints[i][1] > tmpPoints[j][1]):
+                elif (tmpPoints[i][0] == tmpPoints[ j][0] and tmpPoints[i][1] > tmpPoints[j][1]):
                     tmpPoints[i], tmpPoints[j] = tmpPoints[j], tmpPoints[i]
-        tmpEdges = self.graph.edges
-        for i in range(0, len(tmpEdges)):
-            # 先排序x, 再排序y
-            for j in range(i+1, len(tmpEdges)):
-                if (tmpEdges[i][0][0] > tmpEdges[j][0][0]):
-                    tmpEdges[i], tmpEdges[j] = tmpEdges[j], tmpEdges[i]
-                elif (tmpEdges[i][0][0] == tmpEdges[j][0][0] and tmpEdges[i][0][1] > tmpEdges[j][0][1]):
-                    tmpEdges[i], tmpEdges[j] = tmpEdges[j], tmpEdges[i]
+        tmpEdges = []
+
+        for edge in self.graph.edges:
+            tmpEdges.append([edge[0][0], edge[0][1], edge[1][0], edge[1][1]])
+
+
+        for i in tmpEdges:
+            x1, y1, x2, y2 = i
+
+            if (x1 > x2) or (x1 == x2 and y1 > y2):
+                i[0], i[1], i[2], i[3] = i[2], i[3], i[0], i[1]
+
+        tmpEdges.sort(key=lambda x: (x[0]))
+
         if (test):
             for i in range(0, len(tmpPoints)):
                 print(tmpPoints[i])
@@ -695,7 +701,7 @@ class UiApp:
                 file.write(f"{int(point[0])} {int(point[1])}\n")
             for edge in tmpEdges:
                 file.write('E ')
-                file.write(f"{round(edge[0][0],1)} {round(edge[0][1], 1)} {round(edge[1][0], 1)} {round(edge[1][1], 1)}\n")
+                file.write(f"{int(edge[0])} {int(edge[1])} {int(edge[2])} {int(edge[3])}\n")
 
     def readGraph(self):
         self.graph.clear_all()
