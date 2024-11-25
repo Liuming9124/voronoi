@@ -1,5 +1,5 @@
 # $LAN=PYTHON$
-
+# TODO change tuple to list
 import tkinter as tk
 from tkinter import filedialog
 import math
@@ -160,7 +160,7 @@ class Graph():
         # 畫線
         eID = self.canvas.create_line(canvas_x1, canvas_y1, canvas_x2, canvas_y2, fill="blue", tags="line")
         self.edges_id.append(eID)
-        self.edges.append(((canvas_x1, canvas_y1), (canvas_x2, canvas_y2), point1, point2, (dx1, dy1), (dx2, dy2), edge_status))
+        self.edges.append([[canvas_x1, canvas_y1], [canvas_x2, canvas_y2], point1, point2, [dx1, dy1], [dx2, dy2], edge_status])
         
         if test and test_index >= 1:
             print(f"({canvas_x1}, {canvas_y1}), ({canvas_x2}, {canvas_y2})")
@@ -229,9 +229,6 @@ class Graph():
         self.edges_id.clear()
         self.edges.clear()
         self.canvas.delete("line")
-    # find a line by two points
-    def find_line():
-        pass
 
     # 裁切線段回傳畫布上兩端點
     def clip_line(self, point1, point2, line_a, line_b):
@@ -343,7 +340,7 @@ class Graph():
             b = mid_x
         else:
             b = mid_y - slope * mid_x
-        return slope, b
+        return [slope, b]
     
     # use slope and point to find another point
     def lineOtherPoint(self, point, line_slope, line_b):
@@ -355,7 +352,7 @@ class Graph():
         else:
             new_x = x+1
             new_y = line_slope * new_x + line_b
-            return (new_x, new_y)
+            return [new_x, new_y]
 
 # calculate---------------------------------------------------------------------------------------------------------------
 class voronoi():
@@ -445,14 +442,14 @@ class voronoi():
         a_bc, b_bc = self.graph.find_perpendicular_line(b, c)
         # 透過中垂線找出外心
         x, y = self.find_intersection(a_ab, b_ab, a_bc, b_bc)
-        return x, y
+        return [x, y]
 
     # 找兩點的中點
     def midpoint(self, a, b):
         # a, b: 兩個點的座標 ; 回傳: 中點的座標
         x1, y1 = a
         x2, y2 = b
-        return ((x1 + x2) / 2, (y1 + y2) / 2)
+        return [(x1 + x2) / 2, (y1 + y2) / 2]
 
     # 計算兩點距離
     def distance(self, a, b):
@@ -476,7 +473,7 @@ class voronoi():
             else:
                 a = (y2 - y1) / (x2 - x1)
                 b = y1 - a * x1
-            return a, b
+            return [a, b]
 
     # 透過兩條線找出交點 回傳: 兩條線的交點
     def find_intersection(self, a1, b1, a2, b2):
@@ -499,7 +496,7 @@ class voronoi():
         else:
             x = (b2 - b1) / (a1 - a2)
             y = a1 * x + b1
-        return (x, y)
+        return [x, y]
 
     def find_line_degreeMoreThan90(self, Center, P_large, P1, P2, mid_L1, mid_L2, mid_12):
         xm, ym = mid_12
@@ -519,9 +516,9 @@ class voronoi():
         Point = self.find_intersection(a1, b1, a2, b2)
 
         if (self.distance(Point, P_large) < self.distance(mid_12, P_large)):
-            return ( Point, Center, [0,0,1])
+            return [ Point, Center, [0,0,1]]
         else:
-            return ( Center, Point, [0,1,1])
+            return [ Center, Point, [0,1,1]]
     
     # 判斷三角形並找出要畫的線段
     def cal_triangle_line(self, Center, A, B, C, ab, bc, ac): # 中點 Mid; 頂點A, B, C ; 三邊中點 ab, bc, ac => return 三組欲畫的線段，[(mid, one, status), (mid, two, status), (mid, three, status)]
@@ -548,27 +545,27 @@ class voronoi():
         # 計算不同三角形下該畫的線段
         edges = []
         if (cos_A > 0 and cos_B > 0 and cos_C > 0): # 銳角三角形
-            edges.append((Center, ab, [0,1,1]))
-            edges.append((Center, bc, [0,1,1]))
-            edges.append((Center, ac, [0,1,1]))
+            edges.append([Center, ab, [0,1,1]])
+            edges.append([Center, bc, [0,1,1]])
+            edges.append([Center, ac, [0,1,1]])
         else:   # 鈍角三角形 or 直角三角形
             print("鈍角三角形")
             if (cos_C <= 0):
                 print("cos_C <= 0")
-                edges.append((Center, bc, [0,1,1]))
-                edges.append((Center, ac, [0,1,1]))
+                edges.append([Center, bc, [0,1,1]])
+                edges.append([Center, ac, [0,1,1]])
                 edgeFind = self.find_line_degreeMoreThan90(Center, C, A, B, bc, ac, ab)
                 edges.append(edgeFind)
             elif (cos_A <= 0):
                 print("cos_A <= 0")
-                edges.append((Center, ab, [0,1,1]))
-                edges.append((Center, ac, [0,1,1]))
+                edges.append([Center, ab, [0,1,1]])
+                edges.append([Center, ac, [0,1,1]])
                 edgeFind = self.find_line_degreeMoreThan90(Center, A, B, C, ab, ac, bc)
                 edges.append(edgeFind)
             elif (cos_B <= 0):
                 print("cos_B <= 0")
-                edges.append((Center, ab, [0,1,1]))
-                edges.append((Center, bc, [0,1,1]))
+                edges.append([Center, ab, [0,1,1]])
+                edges.append([Center, bc, [0,1,1]])
                 edgeFind = self.find_line_degreeMoreThan90(Center, B, A, C, ab, bc, ac)
                 edges.append(edgeFind)
 
@@ -779,9 +776,6 @@ class UiApp:
                     print(f"({x}, {y})")
                 print()
     def operate_output(self, file_path):
-        # P 226 143
-        # P 322 144
-        # L 269.2 600 275.5 0
         # operate upper line and store in points and edges
         self.graph.clear_all()
         with open(file_path, "r", encoding="utf-8") as file:
@@ -798,9 +792,6 @@ class UiApp:
                 else:
                     print("operate_output error")
                     break
-
-
-
 
 
 # main---------------------------------------------------------------------------------------------------------------
