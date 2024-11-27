@@ -32,14 +32,15 @@ class Graph():
         self.outputPoints = [] # 繪製的點 : [[(x, y)]]
         self.outputEdges = [] # 繪製的邊 : [[( draw1, draw2, point_a, point_b, edge_piont1, edge_point2)]] -> 畫布上兩點, 源自兩point, 長度延伸的兩點
 
-    # add a line to the graph
+    # 計算line兩端點的最大邊界
+    # return endpoints -> [dx1, dy1, dx2, dy2]
     def calculate_line_endpoints(self, point1, point2, edge_status):
         x1, y1 = point1
         x2, y2 = point2
+        
         # 計算斜率 function y = slope * x + b
         slope, b = self.find_line(point1, point2)
-        
-        #計算直線的兩端點
+        # 計算直線的兩端點
         if (slope == None): # 畫出垂直線
             dx1 = dx2 = x1
             if   (edge_status==[0,0,1]):
@@ -115,54 +116,101 @@ class Graph():
                 dy1 = slope * dx1 + b
                 dx2 = -maxsize
                 dy2 = slope * dx2 + b
-        return dx1, dy1, dx2, dy2, slope, b
         
+        print(f"calculate_line_endpoints: {dx1, dy1, dx2, dy2}")
+        return dx1, dy1, dx2, dy2
+
+    # return edge id
     def add_line(self, point1, point2, edge_status, color='blue'): # edge_status = [left, mid, right] -> left=1 : <-1 2, mid=1 : 1-2, right=1 : 1 2-> ; excaption [0,0,0] means perpendicular line 
-        dx1, dy1, dx2, dy2, slope, b = self.calculate_line_endpoints(point1, point2, edge_status)
-        # 檢查線是否在畫布上，若有則裁切成畫布範圍，若無則不畫
-        canvas_x1 = dx1
-        canvas_y1 = dy1
-        canvas_x2 = dx2
-        canvas_y2 = dy2
-
-        if slope is None:  # 處理垂直線的邊界
-            if dy1 < 0:
-                canvas_y1 = 0
-            elif dy1 > self.length:
-                canvas_y1 = self.length
-            if dy2 < 0:
-                canvas_y2 = 0
-            elif dy2 > self.length:
-                canvas_y2 = self.length
-        else:
-            if dx1 < 0:
-                canvas_x1 = 0
-                canvas_y1 = slope * canvas_x1 + b
-            elif dx1 > self.width:
-                canvas_x1 = self.width
-                canvas_y1 = slope * canvas_x1 + b
-            if dx2 < 0:
-                canvas_x2 = 0
-                canvas_y2 = slope * canvas_x2 + b
-            elif dx2 > self.width:
-                canvas_x2 = self.width
-                canvas_y2 = slope * canvas_x2 + b
-
-        canvasP = self.clip_line((canvas_x1, canvas_y1), (canvas_x2, canvas_y2), slope, b)
+        dx1, dy1, dx2, dy2 = self.calculate_line_endpoints(point1, point2, edge_status)
+        canvasP = self.clip_line((dx1, dy1), (dx2, dy2))
         canvas_x1, canvas_y1 = canvasP[0]
         canvas_x2, canvas_y2 = canvasP[1]
 
         # 畫線
         eID = self.canvas.create_line(canvas_x1, canvas_y1, canvas_x2, canvas_y2, fill=color, tags="line")
-        # self.edges_id.append(eID)
         self.edges.append([canvasP[0], canvasP[1], point1, point2, [dx1, dy1], [dx2, dy2], eID])
         return eID
+
+    # 裁切線段回傳畫布上兩端點 -> return [[x1, y1], [x2, y2]]
+    def clip_line(self, point1, point2):
+        line_a, line_b = self.find_line(point1, point2)
+        x1, y1 = point1
+        x2, y2 = point2
+        canvas_x1, canvas_y1 = point1
+        canvas_x2, canvas_y2 = point2
+
+        if line_a is None:  # 處理垂直線的邊界
+            if y1 < 0:
+                canvas_y1 = 0
+            elif y1 > self.length:
+                canvas_y1 = self.length
+            if y2 < 0:
+                canvas_y2 = 0
+            elif y2 > self.length:
+                canvas_y2 = self.length
+        else:
+            if x1 < 0:
+                canvas_x1 = 0
+                canvas_y1 = line_a * canvas_x1 + line_b
+            elif x1 > self.width:
+                canvas_x1 = self.width
+                canvas_y1 = line_a * canvas_x1 + line_b
+            if x2 < 0:
+                canvas_x2 = 0
+                canvas_y2 = line_a * canvas_x2 + line_b
+            elif x2 > self.width:
+                canvas_x2 = self.width
+                canvas_y2 = line_a * canvas_x2 + line_b
+
+        x1, y1 = canvas_x1, canvas_y1
+        x2, y2 = canvas_x2, canvas_y2
+
+        if (x1 > self.length):
+            ty1 = line_a * self.length + line_b
+            if (ty1 >= 0 and ty1 <= self.width):
+                x1 = self.length
+                y1 = ty1
+        elif (x1 < 0):
+            ty1 = line_a * 0 + line_b
+            if (ty1 >= 0 and ty1 <= self.width):
+                x1 = 0
+                y1 = ty1
         
-        if test and test_index >= 1:
-            print(f"({canvas_x1}, {canvas_y1}), ({canvas_x2}, {canvas_y2})")
-            print(f"({point1[0]}, {point1[1]}), ({point2[0]}, {point2[1]})")
-            print(edge_status)
-            print()
+        if (y1 > self.width):
+            tx1 = (self.width - line_b) / line_a
+            if (tx1 >= 0 and tx1 <= self.length):
+                x1 = tx1
+                y1 = self.width
+        elif (y1 < 0):
+            tx1 = (-line_b) / line_a
+            if (tx1 >= 0 and tx1 <= self.length):
+                x1 = tx1
+                y1 = 0
+        
+        if (x2 > self.length):
+            ty2 = line_a * self.length + line_b
+            if (ty2 >= 0 and ty2 <= self.width):
+                x2 = self.length
+                y2 = ty2
+        elif (x2 < 0):
+            ty2 = line_a * 0 + line_b
+            if (ty2 >= 0 and ty2 <= self.width):
+                x2 = 0
+                y2 = ty2
+        
+        if (y2 > self.width):
+            tx2 = (self.width - line_b) / line_a
+            if (tx2 >= 0 and tx2 <= self.length):
+                x2 = tx2
+                y2 = self.width
+        elif (y2 < 0):
+            tx2 = (-line_b) / line_a
+            if (tx2 >= 0 and tx2 <= self.length):
+                x2 = tx2
+                y2 = 0
+            
+        return ([[x1, y1], [x2, y2]])
 
     # add a point to the graph
     def add_point(self, point, color='red', checkindex = -1):
@@ -231,59 +279,9 @@ class Graph():
         self.edges.clear()
         self.canvas.delete("line")
 
-    # 裁切線段回傳畫布上兩端點
-    def clip_line(self, point1, point2, line_a, line_b):
-        x1, y1 = point1
-        x2, y2 = point2
-        
-        if (x1 > self.length):
-            ty1 = line_a * self.length + line_b
-            if (ty1 >= 0 and ty1 <= self.width):
-                x1 = self.length
-                y1 = ty1
-        elif (x1 < 0):
-            ty1 = line_a * 0 + line_b
-            if (ty1 >= 0 and ty1 <= self.width):
-                x1 = 0
-                y1 = ty1
-        
-        if (y1 > self.width):
-            tx1 = (self.width - line_b) / line_a
-            if (tx1 >= 0 and tx1 <= self.length):
-                x1 = tx1
-                y1 = self.width
-        elif (y1 < 0):
-            tx1 = (-line_b) / line_a
-            if (tx1 >= 0 and tx1 <= self.length):
-                x1 = tx1
-                y1 = 0
-        
-        if (x2 > self.length):
-            ty2 = line_a * self.length + line_b
-            if (ty2 >= 0 and ty2 <= self.width):
-                x2 = self.length
-                y2 = ty2
-        elif (x2 < 0):
-            ty2 = line_a * 0 + line_b
-            if (ty2 >= 0 and ty2 <= self.width):
-                x2 = 0
-                y2 = ty2
-        
-        if (y2 > self.width):
-            tx2 = (self.width - line_b) / line_a
-            if (tx2 >= 0 and tx2 <= self.length):
-                x2 = tx2
-                y2 = self.width
-        elif (y2 < 0):
-            tx2 = (-line_b) / line_a
-            if (tx2 >= 0 and tx2 <= self.length):
-                x2 = tx2
-                y2 = 0
-            
-        return ([[x1, y1], [x2, y2]])
-
 
     # add a perpendicular line
+    #  return draw_edge -> [canvasP[0], canvasP[1], point1, point2, [dx1, dy1], [dx2, dy2]]
     def add_perpendicular_line(self, point1, point2):
         x1, y1 = point1
         x2, y2 = point2
@@ -312,7 +310,7 @@ class Graph():
             canvas_x2 = self.length
             canvas_y2 = perp_slope * canvas_x2 + b
             
-        canvasP = self.clip_line((canvas_x1, canvas_y1), (canvas_x2, canvas_y2), perp_slope, b)
+        canvasP = self.clip_line((canvas_x1, canvas_y1), (canvas_x2, canvas_y2))
         canvas_x1, canvas_y1 = canvasP[0]
         canvas_x2, canvas_y2 = canvasP[1]
 
@@ -419,6 +417,7 @@ class Graph():
             y = a1 * x + b1
         return [x, y]
 
+    # return [ Point, Center, [0,0,1]]
     def find_line_degreeMoreThan90(self, Center, P_large, P1, P2, mid_L1, mid_L2, mid_12):
         xm, ym = mid_12
         x1, y1 = P1
@@ -442,6 +441,7 @@ class Graph():
             return [ Center, Point, [0,1,1]]
     
     # 判斷三角形並找出要畫的線段
+    # return 三組欲畫的線段，[(mid, one, status, point1, point2), (mid, two, status, point1, point2), (mid, three, status, point1, point2)]
     def cal_triangle_line(self, Center, A, B, C, ab, bc, ac): # 中點 Mid; 頂點A, B, C ; 三邊中點 ab, bc, ac => return 三組欲畫的線段，[(mid, one, status), (mid, two, status), (mid, three, status)]
         # 定義點 A, B, C 的坐標
         x1, y1 = A
@@ -466,28 +466,34 @@ class Graph():
         # 計算不同三角形下該畫的線段
         edges = []
         if (cos_A > 0 and cos_B > 0 and cos_C > 0): # 銳角三角形
-            edges.append([Center, ab, [0,1,1]])
-            edges.append([Center, bc, [0,1,1]])
-            edges.append([Center, ac, [0,1,1]])
+            edges.append([Center, ab, [0,1,1], A, B])
+            edges.append([Center, bc, [0,1,1], B, C])
+            edges.append([Center, ac, [0,1,1], A, C])
         else:   # 鈍角三角形 or 直角三角形
             print("鈍角三角形")
             if (cos_C <= 0):
                 print("cos_C <= 0")
-                edges.append([Center, bc, [0,1,1]])
-                edges.append([Center, ac, [0,1,1]])
+                edges.append([Center, bc, [0,1,1], B, C])
+                edges.append([Center, ac, [0,1,1], A, C])
                 edgeFind = self.find_line_degreeMoreThan90(Center, C, A, B, bc, ac, ab)
+                edgeFind.append(A)
+                edgeFind.append(B)
                 edges.append(edgeFind)
             elif (cos_A <= 0):
                 print("cos_A <= 0")
-                edges.append([Center, ab, [0,1,1]])
-                edges.append([Center, ac, [0,1,1]])
+                edges.append([Center, ab, [0,1,1], A, B])
+                edges.append([Center, ac, [0,1,1], A, C])
                 edgeFind = self.find_line_degreeMoreThan90(Center, A, B, C, ab, ac, bc)
+                edgeFind.append(B)
+                edgeFind.append(C)
                 edges.append(edgeFind)
             elif (cos_B <= 0):
                 print("cos_B <= 0")
-                edges.append([Center, ab, [0,1,1]])
-                edges.append([Center, bc, [0,1,1]])
+                edges.append([Center, ab, [0,1,1], A, B])
+                edges.append([Center, bc, [0,1,1], B, C])
                 edgeFind = self.find_line_degreeMoreThan90(Center, B, A, C, ab, bc, ac)
+                edgeFind.append(A)
+                edgeFind.append(C)
                 edges.append(edgeFind)
 
         return edges
@@ -507,8 +513,8 @@ class voronoi():
         self.hpedges = []
         self.vedges = []
         # store voronoi diagram
-        self.vl = []
-        self.vr = []
+        self.lvor = []
+        self.rvor = []
         self.vor = []
 
 
@@ -551,24 +557,24 @@ class voronoi():
             return self.convex_hull(points), drawEdge
         elif (len(points) == 3):
             ch ,drawEdges = self.compute_voronoi_three(points)
-            for edge in drawEdges:
-                eID = self.graph.add_line(edge[0], edge[1], edge[2])
-                edge.append(eID)
-                self.graph.edges.append(edge)
             return ch ,drawEdges
         else:
             left, left_id, right, right_id = self.divide(points, points_id)
             # draw left convex hull
             self.uiapp.stop()
             lpoints, lvor = self.voronoi_start( left,  left_id) # left
-            # # draw right convex hull
+            self.lvor = (lvor)
+
+            # draw right convex hull
             self.uiapp.stop()
             rpoints, rvor = self.voronoi_start(right, right_id) # right
-            
+            self.rvor = (rvor)
+
+            # merge
             self.uiapp.stop()
             # mpoints, mvor = 
             self.merge(left, right) # merge(left, right) # TODO doing
-            # return mpoints, mvor
+            return mpoints, mvor
     
     def divide(self, points, points_id):
         # 根據x進行排序 並分成左右兩邊 sort points and points_id together
@@ -587,16 +593,26 @@ class voronoi():
         return left, left_id, right, right_id
 
     def merge(self, left, right):
+        # merge hull and find lower and upper tangent
         chl = self.convex_hull(left)
         chr = self.convex_hull(right)
-        merge_chr, lower, upper = self.merge_hull(chl, chr)
-        for i in range(len(merge_chr)):
-            if (i != len(merge_chr)-1):
-                self.ch.append(self.graph.add_line(merge_chr[i], merge_chr[i+1], [0, 1, 0]))
+        merge_ch, lower, upper = self.merge_hull(chl, chr)
+        # draw merge convex hull
+        for i in range(len(merge_ch)):
+            if (i != len(merge_ch)-1):
+                self.ch.append(self.graph.add_line(merge_ch[i], merge_ch[i+1], [0, 1, 0]))
             else:
-                self.ch.append(self.graph.add_line(merge_chr[0], merge_chr[i], [0, 1, 0]))
-            
-
+                self.ch.append(self.graph.add_line(merge_ch[0], merge_ch[i], [0, 1, 0]))
+        # draw voronoi left and right
+        print("-------------------------------------")
+        print(len(self.lvor))
+        print(self.lvor)
+        # for i in range(len(self.lvor)):
+        #     # draw
+        #     print(self.lvor[i])
+        #     eID = self.graph.add_line(self.lvor[i][0], self.lvor[i][1], [0,1,0])
+        #     self.lvor[i][6] = eID
+        print("--------------end--------------------")
         self.uiapp.stop()
         # delete convex hull
         for id in self.ch:
@@ -607,12 +623,13 @@ class voronoi():
         # self.graph.add_line(lower[0], lower[1], [0, 1, 0], 'red')
         # self.graph.add_line(upper[0], upper[1], [0, 1, 0], 'red')
 
-        self.hyper_plane(left, right)
-        self.wipe_line()
+        # self.hyper_plane(left, right)
+        # self.wipe_line()
         # voronoi
         # self.merge()
         # self.convex_hull(left + right)
 
+    # return ch <- points
     def convex_hull(self, points): # use graham's scan
         # Step 1: Find the base point (lowest and left-most point)
         points.sort(key=lambda x: (x[1], x[0]))  # Sort by y, then by x
@@ -651,6 +668,7 @@ class voronoi():
     def compare_angle(self, o, a, b):
         return self.cross(o, a, b) > 0
 
+    # return self.convex_hull(chl+chr), lower_tangent, upper_tangent
     def merge_hull(self, chl, chr):
         # 找出左凸包的最右點和右凸包的最左點
         rightmost_chl = max(chl, key=lambda x: x[0])  # 左凸包最右點
@@ -732,7 +750,6 @@ class voronoi():
                 break
             idx = (idx + 1) % len(chr)
 
-
         # self.graph.add_line(lower_tangent[0], lower_tangent[1], [0, 1, 0], 'red')
         # self.graph.add_line(upper_tangent[0], upper_tangent[1], [0, 1, 0], 'red')
 
@@ -740,20 +757,23 @@ class voronoi():
         return self.convex_hull(chl+chr), lower_tangent, upper_tangent
     
     def hyper_plane(self, left, right):
-        print("hyper")
+        # print("hyper")
         pass
 
     def wipe_line(self):
-        print("wipe")
+        # print("wipe")
         pass
     
+    # return self.convex_hull(points), drawEdges
     def compute_voronoi_three(self, points):
+        # store edges return
+        EdgePoints = []
         # 找出三點共線
         a, b = self.graph.find_line(points[0], points[1])
         a1, b1 = self.graph.find_line(points[0], points[2])
         if (test and test_index <= 1):
             print(f'compute_voronoi: y = {a} x + {b}; y = {a1} x + {b1}')
-        # 三點共線
+        # 三點共線 TODO change save structure
         if (a == None and a1 == None):
             if (test and test_index <= 1):
                 print("三點共線")
@@ -819,12 +839,21 @@ class voronoi():
 
             # 找出三條要畫的線段
             drawEdges = self.graph.cal_triangle_line((center_x, center_y), points[0], points[1], points[2], (x1, y1), (x2, y2), (x3, y3))
-            for edge in drawEdges:
-                eID = self.graph.add_line(edge[0], edge[1], edge[2])
-                edge.append(eID)
-                self.graph.edges.append(edge)
+            for edge in drawEdges: # edge =  (mid, one, status, point1, point2)
+                EdgePoint = []
+                dx1, dy1, dx2, dy2 = self.graph.calculate_line_endpoints(edge[0], edge[1], edge[2]) # [dx1, dy1, dx2, dy2, slope, b]
+                Point1 = [dx1, dy1]
+                Point2 = [dx2, dy2]
+                # [draw1, draw2, point_a, point_b, edge_piont1, edge_point2, id]
+                EdgePoint.extend([Point1, Point2, edge[3], edge[4]])
+                # clip edge
+                draw1, draw2 = self.graph.clip_line(Point1, Point2)
+                eID = self.graph.add_line(draw1, draw2, [0, 1, 0])
+                EdgePoint.append(eID)
+                EdgePoints.append(EdgePoint)
+                self.graph.edges.append(EdgePoint)
 
-        return self.convex_hull(points), drawEdges
+        return self.convex_hull(points), EdgePoints
 
 # gui---------------------------------------------------------------------------------------------------------------------
 class UiApp:
