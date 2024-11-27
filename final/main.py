@@ -511,40 +511,64 @@ class voronoi():
         self.vr = []
         self.vor = []
 
-        
+
     def compute_voronoi(self):
-        self.voronoi_start(self.graph.points, self.graph.points_id)
+        if (len(self.graph.points) <=1):
+            return self.graph.points, []
+        elif (len(self.graph.points) == 2):
+            drawEdge = self.graph.add_perpendicular_line(self.graph.points[0], self.graph.points[1])
+            eID = self.canvas.create_line(drawEdge[0][0], drawEdge[0][1], drawEdge[1][0], drawEdge[1][1], fill="blue", tags="line")
+            drawEdge.append(eID)
+            self.graph.edges.append(drawEdge)
+            return self.graph.points, drawEdge
+        elif (len(self.graph.points) == 3):
+            ch ,drawEdges = self.compute_voronoi_three(self.graph.points)
+            for edge in drawEdges:
+                eID = self.graph.add_line(edge[0], edge[1], edge[2])
+                edge.append(eID)
+                self.graph.edges.append(edge)
+            return ch ,drawEdges
+        else:
+            points, drawEdges = self.voronoi_start(self.graph.points, self.graph.points_id)
+            # for edge in drawEdges:
+            #     eID = self.graph.add_line(edge[0], edge[1], edge[2])
+            #     edge.append(eID)
+            #     self.graph.edges.append(edge)
+            for edge in vor:
+                eID = self.graph.add_line(edge[0], edge[1], edge[2])
+                edge.append(eID)
+                self.graph.edges.append(edge)
 
     def voronoi_start(self, points, points_id):
         if (len(points) <=1):
             return points, [] # return v_points, v_edges
         elif (len(points) == 2):
             drawEdge = self.graph.add_perpendicular_line(points[0], points[1]) # return [canvasP[0], canvasP[1], point1, point2, [dx1, dy1], [dx2, dy2]]
+            print(drawEdge)
             eID = self.canvas.create_line(drawEdge[0][0], drawEdge[0][1], drawEdge[1][0], drawEdge[1][1], fill="blue", tags="line")
             drawEdge.append(eID)
             self.graph.edges.append(drawEdge)
             return self.convex_hull(points), drawEdge
         elif (len(points) == 3):
-            drawEdge = self.compute_voronoi_three(points)
-            return points, drawEdge
+            ch ,drawEdges = self.compute_voronoi_three(points)
+            for edge in drawEdges:
+                eID = self.graph.add_line(edge[0], edge[1], edge[2])
+                edge.append(eID)
+                self.graph.edges.append(edge)
+            return ch ,drawEdges
         else:
             left, left_id, right, right_id = self.divide(points, points_id)
+            # draw left convex hull
             self.uiapp.stop()
             lpoints, lvor = self.voronoi_start( left,  left_id) # left
-            # draw left convex hull
-
-            # self.uiapp.stop()
-            # # wipe left convex hull
-            # self.uiapp.stop()
             # # draw right convex hull
-            # self.uiapp.stop()
-            # # wipe right convex hull
-
             self.uiapp.stop()
             rpoints, rvor = self.voronoi_start(right, right_id) # right
-            # self.uiapp.stop()
-            mpoints, mvor = self.merge(left, right) # merge(left, right) # TODO doing
-            return mpoints, mvor
+            
+            self.uiapp.stop()
+            # mpoints, mvor = 
+            self.merge(left, right) # merge(left, right) # TODO doing
+            # return mpoints, mvor
     
     def divide(self, points, points_id):
         # 根據x進行排序 並分成左右兩邊 sort points and points_id together
@@ -556,10 +580,10 @@ class voronoi():
         mid = len(points) // 2
         left, right = points[:mid], points[mid:]
         left_id, right_id = points_id[:mid], points_id[mid:]
-        if test==True and test_index <= 1:
-            print("-----devide-----")
-            print(left, right)
-            print("-----devideEnd-----")
+        # if test==True and test_index <= 1:
+        #     print("-----devide-----")
+        #     print(left, right)
+        #     print("-----devideEnd-----")
         return left, left_id, right, right_id
 
     def merge(self, left, right):
@@ -608,13 +632,15 @@ class voronoi():
             ch.append(p)
 
         # Step 4: Draw the convex hull
-        self.uiapp.stop()
+        # self.uiapp.stop()
+        chEdges = []
         for i in range(len(ch)):
-            self.graph.add_line(ch[i], ch[(i + 1) % len(ch)], [0, 1, 0])  # Connect points in hull
-        
+            eID = self.graph.add_line(ch[i], ch[(i + 1) % len(ch)], [0, 1, 0])  # Connect points in hull
+            chEdges.append([ch[i], ch[(i + 1) % len(ch)], [0, 1, 0], eID])
+
         self.uiapp.stop()
         self.graph.clear_lines()
-        return ch
+        return ch #, chEdges # TODO !!!!! hurry
     
     def angle(self, o, p):  # calculate polar angle with respect to the base point
         return math.atan2(p[1] - o[1], p[0] - o[0])
@@ -798,7 +824,7 @@ class voronoi():
                 edge.append(eID)
                 self.graph.edges.append(edge)
 
-        self.convex_hull(points)
+        return self.convex_hull(points), drawEdges
 
 # gui---------------------------------------------------------------------------------------------------------------------
 class UiApp:
