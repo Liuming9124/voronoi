@@ -505,6 +505,8 @@ class voronoi():
         self.uiapp = uiapp
         self.canvas = canvas
         self.graph = graph
+
+# TODO Reset store
         # store diagram
         self.points = []
         self.chl = []
@@ -530,8 +532,9 @@ class voronoi():
         elif (len(self.graph.points) == 3):
             ch ,drawEdges = self.compute_voronoi_three(self.graph.points)
             for edge in drawEdges:
-                eID = self.graph.add_line(edge[0], edge[1], edge[2])
-                edge.append(eID)
+                print(edge)
+                eID = self.graph.add_line(edge[0], edge[1], [0, 1, 0])
+                edge[6] = eID
                 self.graph.edges.append(edge)
             return ch ,drawEdges
         else:
@@ -764,7 +767,7 @@ class voronoi():
         # print("wipe")
         pass
     
-    # return self.convex_hull(points), drawEdges
+    # return self.convex_hull(points), drawEdges # TODO modify return structure
     def compute_voronoi_three(self, points):
         # store edges return
         EdgePoints = []
@@ -845,11 +848,10 @@ class voronoi():
                 Point1 = [dx1, dy1]
                 Point2 = [dx2, dy2]
                 # [draw1, draw2, point_a, point_b, edge_piont1, edge_point2, id]
-                EdgePoint.extend([Point1, Point2, edge[3], edge[4]])
                 # clip edge
                 draw1, draw2 = self.graph.clip_line(Point1, Point2)
                 eID = self.graph.add_line(draw1, draw2, [0, 1, 0])
-                EdgePoint.append(eID)
+                EdgePoint.extend([draw1, draw2, edge[3], edge[4], Point1, Point2, eID])
                 EdgePoints.append(EdgePoint)
                 self.graph.edges.append(EdgePoint)
 
