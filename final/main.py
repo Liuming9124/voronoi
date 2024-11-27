@@ -14,8 +14,7 @@ class Graph():
         # 當前情況的圖
         self.points_id = []  # 存取每個圖的點的 id : [id]
         self.points = []    # 存取每個圖的點 : [(x, y)]
-        # self.edges_id = []   # 存取每個圖的邊的 id : [id]
-        self.edges = []     # 繪製的邊 : [[draw1, draw2, point_a, point_b, edge_piont1, edge_point2, id]] -> 畫布上兩點, 源自兩point, 長度延伸的兩點
+        self.edges = []     # 繪製的邊 : [[draw1, draw2, point_a, point_b, edge_piont1, edge_point2, id]] -> 畫布上兩點, 源自兩point, 長度延伸的兩點, line_id
 
         # 讀檔的圖
         self.inputCurrentIndex = 0
@@ -25,7 +24,6 @@ class Graph():
         # store record for step by step
         self.rpoints_id = []
         self.rpoints = []
-        self.redges_id = []
         self.redges = []
         
         # 輸出用: 兩層列表，第一層存取每個圖的點，第二層存取每個圖的點座標
@@ -117,7 +115,7 @@ class Graph():
                 dx2 = -maxsize
                 dy2 = slope * dx2 + b
         
-        print(f"calculate_line_endpoints: {dx1, dy1, dx2, dy2}")
+        # print(f"calculate_line_endpoints: {dx1, dy1, dx2, dy2}")
         return dx1, dy1, dx2, dy2
 
     # return edge id
@@ -129,7 +127,7 @@ class Graph():
 
         # 畫線
         eID = self.canvas.create_line(canvas_x1, canvas_y1, canvas_x2, canvas_y2, fill=color, tags="line")
-        self.edges.append([canvasP[0], canvasP[1], point1, point2, [dx1, dy1], [dx2, dy2], eID])
+        self.edges.append([canvasP[0], canvasP[1], point1, point2, [dx1, dy1], [dx2, dy2], eID]) # TODO maybe only store output is okey
         return eID
 
     # 裁切線段回傳畫布上兩端點 -> return [[x1, y1], [x2, y2]]
@@ -268,6 +266,7 @@ class Graph():
                     x, y = point2
                     # self.canvas.delete(c_twoToOne)
     
+    #clear line by id
     def clear_lineID(self, id):
         print("clear line",end=" ")
         print(id)
@@ -279,9 +278,7 @@ class Graph():
         self.edges.clear()
         self.canvas.delete("line")
 
-
-    # add a perpendicular line
-    #  return draw_edge -> [canvasP[0], canvasP[1], point1, point2, [dx1, dy1], [dx2, dy2]]
+    # add a perpendicular line #  return draw_edge -> [canvasP[0], canvasP[1], point1, point2, [dx1, dy1], [dx2, dy2]]
     def add_perpendicular_line(self, point1, point2):
         x1, y1 = point1
         x2, y2 = point2
@@ -315,12 +312,8 @@ class Graph():
         canvas_x2, canvas_y2 = canvasP[1]
 
         draw_edge = [canvasP[0], canvasP[1], point1, point2, [dx1, dy1], [dx2, dy2]]
-        # test = [(0,0) ,(0,0),(0,0),(0,0),(0,0),(0,0) ]
         return draw_edge
-        # eID = self.canvas.create_line(canvas_x1, canvas_y1, canvas_x2, canvas_y2, fill="blue", tags="line")
-        # # self.edges_id.append(eID)
-        # self.edges.append(((canvas_x1, canvas_y1), (canvas_x2, canvas_y2), point1, point2, (dx1, dy1), (dx2, dy2), eID))
-        
+
     # find the perpendicular line
     def find_perpendicular_line(self, point1, point2):
         # return slope and b
@@ -352,7 +345,6 @@ class Graph():
             new_x = x+1
             new_y = line_slope * new_x + line_b
             return [new_x, new_y]
-
     
     # 找三角形的外心 : a, b, c: 三角形的三個頂點 ; 回傳: 外心的座標
     def circumcenter(self, a, b, c):
@@ -506,7 +498,6 @@ class voronoi():
         self.canvas = canvas
         self.graph = graph
 
-# TODO Reset store
         # store diagram
         self.points = []
         self.chl = []
@@ -518,6 +509,17 @@ class voronoi():
         self.lvor = []
         self.rvor = []
         self.vor = []
+
+    def resetVoronoi(self):
+        self.points.clear()
+        self.chl.clear()
+        self.chr.clear()
+        self.ch.clear()
+        self.hpedges.clear()
+        self.vedges.clear()
+        self.lvor.clear()
+        self.rvor.clear()
+        self.vor.clear()
 
 
     def compute_voronoi(self):
@@ -539,14 +541,6 @@ class voronoi():
             return ch ,drawEdges
         else:
             points, drawEdges = self.voronoi_start(self.graph.points, self.graph.points_id)
-            # for edge in drawEdges:
-            #     eID = self.graph.add_line(edge[0], edge[1], edge[2])
-            #     edge.append(eID)
-            #     self.graph.edges.append(edge)
-            for edge in vor:
-                eID = self.graph.add_line(edge[0], edge[1], edge[2])
-                edge.append(eID)
-                self.graph.edges.append(edge)
 
     def voronoi_start(self, points, points_id):
         if (len(points) <=1):
@@ -579,6 +573,7 @@ class voronoi():
             self.merge(left, right) # merge(left, right) # TODO doing
             return mpoints, mvor
     
+    # devide points into left and right -> return [left, left_id, right, right_id]
     def divide(self, points, points_id):
         # 根據x進行排序 並分成左右兩邊 sort points and points_id together
         for i in range(len(points)):
@@ -609,12 +604,20 @@ class voronoi():
         # draw voronoi left and right
         print("-------------------------------------")
         print(len(self.lvor))
-        print(self.lvor)
-        # for i in range(len(self.lvor)):
-        #     # draw
-        #     print(self.lvor[i])
-        #     eID = self.graph.add_line(self.lvor[i][0], self.lvor[i][1], [0,1,0])
-        #     self.lvor[i][6] = eID
+        for vor in self.lvor:
+            print(vor)
+        for i in range(len(self.lvor)):
+            # draw
+            print(self.lvor[i])
+            eID = self.graph.add_line(self.lvor[i][0], self.lvor[i][1], [0,1,0])
+            self.lvor[i][6] = eID
+        for vor in self.rvor:
+            print(vor)
+        for i in range(len(self.rvor)):
+            # draw
+            print(self.rvor[i])
+            eID = self.graph.add_line(self.rvor[i][0], self.rvor[i][1], [0,1,0])
+            self.rvor[i][6] = eID
         print("--------------end--------------------")
         self.uiapp.stop()
         # delete convex hull
@@ -662,12 +665,15 @@ class voronoi():
         self.graph.clear_lines()
         return ch #, chEdges # TODO !!!!! hurry
     
+    # return angle -> polar angle with respect to the base point
     def angle(self, o, p):  # calculate polar angle with respect to the base point
         return math.atan2(p[1] - o[1], p[0] - o[0])
     
+    # return cross product
     def cross(self, o, a, b): # cross product
         return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
     
+    # return True if a is clockwise from b with respect to the origin o
     def compare_angle(self, o, a, b):
         return self.cross(o, a, b) > 0
 
@@ -770,7 +776,7 @@ class voronoi():
     # return self.convex_hull(points), drawEdges # TODO modify return structure
     def compute_voronoi_three(self, points):
         # store edges return
-        EdgePoints = []
+        EdgePoints = [] # TODO check whether store origin edges with maxsize and minsize
         # 找出三點共線
         a, b = self.graph.find_line(points[0], points[1])
         a1, b1 = self.graph.find_line(points[0], points[2])
@@ -794,9 +800,10 @@ class voronoi():
                 if (i != center):
                     drawEdge = self.graph.add_perpendicular_line(points[center], points[i]) # return [canvasP[0], canvasP[1], point1, point2, [dx1, dy1], [dx2, dy2]]
                     eID = self.canvas.create_line(drawEdge[0][0], drawEdge[0][1], drawEdge[1][0], drawEdge[1][1], fill="blue", tags="line")
-                    # self.graph.edges_id.append(eID)
                     drawEdge.append(eID)
+                    EdgePoints.append(drawEdge)
                     self.graph.edges.append(drawEdge)
+            
         elif (a == a1):
             if (test and test_index <= 1):
                 print("三點共線-非垂直")
@@ -827,8 +834,8 @@ class voronoi():
                 if (i != center):
                     drawEdge = self.graph.add_perpendicular_line(points[center], points[i]) # return [canvasP[0], canvasP[1], point1, point2, [dx1, dy1], [dx2, dy2]]
                     eID = self.canvas.create_line(drawEdge[0][0], drawEdge[0][1], drawEdge[1][0], drawEdge[1][1], fill="blue", tags="line")
-                    # self.graph.edges_id.append(eID)
                     drawEdge.append(eID)
+                    EdgePoints.append(drawEdge)
                     self.graph.edges.append(drawEdge)
         # 三點不共線
         else:
@@ -1072,6 +1079,7 @@ class UiApp:
                     break
 
     def stepbystep(self):
+        self.voronoi_diagram.resetVoronoi()
         self.stepbystep_flag = True
         self.pause_flag = True
         self.run()
