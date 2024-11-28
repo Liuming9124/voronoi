@@ -390,6 +390,7 @@ class Graph():
     def find_intersection(self, a1, b1, a2, b2):
         # a1, b1: 第一條線的斜率和截距
         # a2, b2: 第二條線的斜率和截距
+        print(f"find_intersection: {a1, b1, a2, b2}")
 
         if (a1 == a2):
             if (b1 == b2):
@@ -490,7 +491,50 @@ class Graph():
 
         return edges
 
+    # 計算點是否有在線段上 -> return True or False
+    def pointOnLine(self, point, line_point1, line_point2):
+        if (point == line_point1 or point == line_point2):
+            return True
+        online_flag = False
+        onpart_flag = False
+        slope, b = self.find_line(line_point1, line_point2)
+        if (slope == None):
+            if (point[0] == line_point1[0]):
+                online_flag = True
+        else:
+            if (point[1] == slope * point[0] + b):
+                online_flag = True
+        if (online_flag):
+            if ((point[0] >= min(line_point1[0], line_point2[0]) and point[0] <= max(line_point1[0], line_point2[0])) and 
+                (point[1] >= min(line_point1[1], line_point2[1]) and point[1] <= max(line_point1[1], line_point2[1]))):
+                onpart_flag = True
+        return onpart_flag
 
+    # 計算兩線段是否有交點 -> return [T or F, [x, y]]
+    def intersectionTwoLineparts(self, line1, line2):
+        # line1, line2: 兩條線段的座標 ; 回傳: 是否有交點, 交點座標
+        slope1, b1 = self.find_line(line1[0], line1[1])
+        slope2, b2 = self.find_line(line2[0], line2[1])
+        intersection = self.find_intersection(slope1, b1, slope2, b2)
+        if (intersection == None):
+            return [False, []]
+        else:
+            if (self.pointOnLine(intersection, line1[0], line1[1]) and self.pointOnLine(intersection, line2[0], line2[1])):
+                return [True, intersection]
+            else:
+                return [False, []]
+
+    # # from upper to lower to find the first intersection point and line -> return first intersection point and line
+    # def find_first_intersedction(self, line, vor): # TODO ondo
+    #     line_p1, line_p2 = line
+    #     # input two points of line and from upper to lower to scan for the first intersection point
+    #     intersections = []
+    #     for i in range(len(vor)):
+    #         if (self.pointOnLine(vor[i][0], line_p1, line_p2) or self.pointOnLine(vor[i][1], line_p1, line_p2)):
+    #             intersections.append(vor[i])
+            
+        
+        return []
 # calculate---------------------------------------------------------------------------------------------------------------
 class voronoi():
     def __init__(self, canvas, graph, uiapp):
@@ -540,7 +584,8 @@ class voronoi():
                 self.graph.edges.append(edge)
             return ch ,drawEdges
         else:
-            points, drawEdges = self.voronoi_start(self.graph.points, self.graph.points_id)
+            # points, drawEdges = 
+            self.voronoi_start(self.graph.points, self.graph.points_id)
 
     def voronoi_start(self, points, points_id):
         if (len(points) <=1):
@@ -549,9 +594,9 @@ class voronoi():
             drawEdge = self.graph.add_perpendicular_line(points[0], points[1]) # return [canvasP[0], canvasP[1], point1, point2, [dx1, dy1], [dx2, dy2]]
             print(drawEdge)
             eID = self.canvas.create_line(drawEdge[0][0], drawEdge[0][1], drawEdge[1][0], drawEdge[1][1], fill="blue", tags="line")
-            drawEdge.append(eID)
-            self.graph.edges.append(drawEdge)
-            return self.convex_hull(points), drawEdge
+            Edgepoint = [drawEdge[0], drawEdge[1], points[0], points[1], drawEdge[4], drawEdge[5], eID]
+            self.graph.edges.append(Edgepoint)
+            return self.convex_hull(points), [Edgepoint]
         elif (len(points) == 3):
             ch ,drawEdges = self.compute_voronoi_three(points)
             return ch ,drawEdges
@@ -571,7 +616,7 @@ class voronoi():
             self.uiapp.stop()
             # mpoints, mvor = 
             self.merge(left, right) # merge(left, right) # TODO doing
-            return mpoints, mvor
+            return left+right, left_id+right_id
     
     # devide points into left and right -> return [left, left_id, right, right_id]
     def divide(self, points, points_id):
@@ -595,8 +640,12 @@ class voronoi():
         chl = self.convex_hull(left)
         chr = self.convex_hull(right)
         merge_ch, lower, upper = self.merge_hull(chl, chr)
+        print("merge_ch", merge_ch)
+        print("lower", lower)
+        print("upper", upper)
         # draw merge convex hull
         for i in range(len(merge_ch)):
+            # if (lower)
             if (i != len(merge_ch)-1):
                 self.ch.append(self.graph.add_line(merge_ch[i], merge_ch[i+1], [0, 1, 0]))
             else:
@@ -624,12 +673,8 @@ class voronoi():
         for id in self.ch:
             self.graph.clear_lineID(id)
         self.ch.clear()
-        
-        # self.uiapp.stop()
-        # self.graph.add_line(lower[0], lower[1], [0, 1, 0], 'red')
-        # self.graph.add_line(upper[0], upper[1], [0, 1, 0], 'red')
 
-        # self.hyper_plane(left, right)
+        self.hyper_plane(lower, upper)
         # self.wipe_line()
         # voronoi
         # self.merge()
@@ -711,7 +756,7 @@ class voronoi():
             if not moved:
                 break
 
-        lower_tangent = (chl[i], chr[j])  # 下公切線的兩個端點
+        lower_tangent = [chl[i], chr[j]]  # 下公切線的兩個端點
 
         # 找上公切線
         i = chl.index(rightmost_chl)  # 重置索引
@@ -739,7 +784,7 @@ class voronoi():
             if not moved:
                 break
 
-        upper_tangent = (chl[i], chr[j])  # 上公切線的兩個端點
+        upper_tangent = [chl[i], chr[j]]  # 上公切線的兩個端點
 
         # 合併凸包
         # 收集下公切線左側到上公切線左側的點
@@ -759,21 +804,45 @@ class voronoi():
                 break
             idx = (idx + 1) % len(chr)
 
+        # ensure upper is above lower
+        if ((lower_tangent[0][1] >= upper_tangent[0][1] and lower_tangent[1][1] >= upper_tangent[1][1]) or (lower_tangent[0][0] <= upper_tangent[0][0] and lower_tangent[1][0] <= upper_tangent[1][0])):
+            lower_tangent, upper_tangent = upper_tangent, lower_tangent
+
         # self.graph.add_line(lower_tangent[0], lower_tangent[1], [0, 1, 0], 'red')
         # self.graph.add_line(upper_tangent[0], upper_tangent[1], [0, 1, 0], 'red')
-
+        
         # print(merged_hull)
         return self.convex_hull(chl+chr), lower_tangent, upper_tangent
     
-    def hyper_plane(self, left, right):
-        # print("hyper")
-        pass
+    def hyper_plane(self, lower, upper):
+        # draw lower and upper tangent
+        if test:
+            self.graph.add_line(lower[0], lower[1], [0, 1, 0], 'red')
+            # self.graph.add_line(upper[0], upper[1], [0, 1, 0], 'red')
+        # use the perpendicular line to find the hyperplane -> use lower
+        drawEdge = self.graph.add_perpendicular_line(lower[0], lower[1])
+        eID = self.canvas.create_line(drawEdge[0][0], drawEdge[0][1], drawEdge[1][0], drawEdge[1][1], fill="green", tags="line")
+        hpedge = [drawEdge[0], drawEdge[1], lower[0], lower[1], drawEdge[4], drawEdge[5], eID]
+
+        
+        # from upper to lower to find the first intersection point and line -> return first intersection point and line
+        # intersectionTwoLineparts
+
+        # while True:
+        #     for i in range(len(self.vor)):
+        #         print(f'vor {i}:', self.vor[i])
+        #         if (self.pointOnLine(self.vor[i][0], lower[0], lower[1]) or self.pointOnLine(self.vor[i][1], lower[0], lower[1])):
+        #             intersections.append(self.vor[i])
+
+        self.uiapp.stop()
+        self.hpedges.clear()
+
 
     def wipe_line(self):
         # print("wipe")
         pass
     
-    # return self.convex_hull(points), drawEdges # TODO modify return structure
+    # return self.convex_hull(points), EdgePoints # TODO modify return structure
     def compute_voronoi_three(self, points):
         # store edges return
         EdgePoints = [] # TODO check whether store origin edges with maxsize and minsize
@@ -851,7 +920,7 @@ class voronoi():
             drawEdges = self.graph.cal_triangle_line((center_x, center_y), points[0], points[1], points[2], (x1, y1), (x2, y2), (x3, y3))
             for edge in drawEdges: # edge =  (mid, one, status, point1, point2)
                 EdgePoint = []
-                dx1, dy1, dx2, dy2 = self.graph.calculate_line_endpoints(edge[0], edge[1], edge[2]) # [dx1, dy1, dx2, dy2, slope, b]
+                dx1, dy1, dx2, dy2 = self.graph.calculate_line_endpoints(edge[0], edge[1], edge[2]) # [dx1, dy1, dx2, dy2]
                 Point1 = [dx1, dy1]
                 Point2 = [dx2, dy2]
                 # [draw1, draw2, point_a, point_b, edge_piont1, edge_point2, id]
@@ -931,6 +1000,7 @@ class UiApp:
     def clear(self):
         """當點擊 Clear 按鈕時，清除畫布。"""
         self.graph.clear_all()
+        self.voronoi_diagram.resetVoronoi()
     
     def record_point(self, event):
         """紀錄點擊的 x, y 座標，並在畫布上繪製紅色小圓點。"""
