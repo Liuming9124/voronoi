@@ -700,9 +700,9 @@ class voronoi():
         for i in range(len(merge_ch)):
             # if (lower)
             if (i != len(merge_ch)-1):
-                self.ch.append(self.graph.add_line(merge_ch[i], merge_ch[i+1], [0, 1, 0]))
+                self.ch.append(self.graph.add_line(merge_ch[i], merge_ch[i+1], [0, 1, 0], 'gray'))
             else:
-                self.ch.append(self.graph.add_line(merge_ch[0], merge_ch[i], [0, 1, 0]))
+                self.ch.append(self.graph.add_line(merge_ch[0], merge_ch[i], [0, 1, 0], 'gray'))
         # draw voronoi left and right
         print("---------------vorstart-------------")
         print('self.lvor', len(self.lvor))
@@ -871,33 +871,33 @@ class voronoi():
     
     def hyper_plane(self, lower, upper):
         # draw lower and upper tangent
-        if test and test_index <= 2:
+        if test and test_index <= 3:
             # self.graph.add_line(lower[0], lower[1], [0, 1, 0], 'red')
             self.graph.add_line(lower[0], lower[1], [0, 1, 0], 'red')
         # use the perpendicular line to find the hyperplane -> use lower
         drawEdge = self.graph.add_perpendicular_line(lower[0], lower[1])
         eID = self.canvas.create_line(drawEdge[0][0], drawEdge[0][1], drawEdge[1][0], drawEdge[1][1], fill="green", tags="line")
         # 第一次會與lower_tangent相交
+        if drawEdge[4][1] > drawEdge[5][1]:
+            drawEdge[4], drawEdge[5] = drawEdge[5], drawEdge[4]
+            drawEdge[0], drawEdge[1] = drawEdge[1], drawEdge[0]
+        # store low and up in hpUp and hpLow
+        hpLow, hpUp = drawEdge[4], drawEdge[5]
         hpedge = [drawEdge[0], drawEdge[1], lower[0], lower[1], drawEdge[4], drawEdge[5], eID]
-
         
         # from upper to lower to find the first intersection point and line -> return first intersection point and line
         # 最多交集len(vor)條線段
-        print('vor:', len(self.vor))
+        if test and test_index <= 2:
+            print('vor:', len(self.vor))
         for i in range(len(self.vor)):
-            # print(f'vor {i}:', self.vor[i])
             intersections_flag = False
             intersections = []
+            touchLine = []
             for j in range(len(self.vor)):
-                # use intersectionTwoLineparts to find intersection point
-                # if (i == j):
-                #     continue
-                # self.uiapp.stop()
-                print('----', hpedge, '----')
-                print('----', self.vor[j], '----')
                 if (test and test_index <= 2):
                     self.graph.add_line(self.vor[j][0], self.vor[j][1], [0, 1, 0], 'orange')
-                    # self.uiapp.stop()
+                    self.uiapp.stop()
+                # use intersectionTwoLineparts to find intersection point
                 intersection_flag = False
                 intersection_flag, intersection = self.graph.intersectionTwoLineparts( [hpedge[4], hpedge[5]], [self.vor[j][4], self.vor[j][5]]) # 計算兩線段是否有交點 -> return [T or F, [x, y]]
                 if (intersection_flag):
@@ -905,31 +905,77 @@ class voronoi():
                     if (test and test_index <= 2):
                         self.canvas.create_oval(intersection[0] - 3, intersection[1] - 3, intersection[0] + 3, intersection[1] + 3, fill='blue')
                         # self.uiapp.stop()
-                    intersections.append(intersection)
-            if test and test_index <= 2:
-                # self.uiapp.stop()
-                if (intersections_flag):
-                    print(intersections)
-            # 如果有找到交點，則找出最近的交點，由上往下找
+                    intersections.append([intersection, self.vor[j]])
+            # 如果有找到交點，則找出最近的交點，由lower往upper找
             if (intersections_flag):
                 # sort intersection by y
-                if test and test_index <= 3:
+                # intersections.sort(key=lambda x: x[1])
+                intersections.sort(key=lambda x: x[0][1])
+                intersection = intersections[0][0]
+                touchLine = intersections[0][1]
+                # intersection = intersections[0]
+                if test and test_index <= 3: # TODO not operate out of boundary
+                    self.canvas.create_oval(intersection[0] - 3, intersection[1] - 3, intersection[0] + 3, intersection[1] + 3, fill='yellow')
                     self.uiapp.stop()
-                intersections.sort(key=lambda x: x[1])
-                intersection = intersections[0]
-                self.canvas.create_oval(intersection[0] - 3, intersection[1] - 3, intersection[0] + 3, intersection[1] + 3, fill='yellow')
-            print(f'intersections: {intersections}')
+            else:
+                break
+            # 先處理前一個hyperplane
+            self.graph.clear_lineID(hpedge[6])
+            self.uiapp.stop()
+            # TYPE -> hpedge = [low_drawEdge[0], Up_drawEdge[1], lower[0], lower[1], low_drawEdge[4], Up_drawEdge[5], eID]
+            hpUp = intersection
+            drawLow, drawUp = self.graph.clip_line(hpLow, hpUp)
+            print('drawLow, drawUp, hpLow, hpUp')
+            print(drawLow, drawUp, hpLow, hpUp)
+            self.uiapp.stop()
+            # store and draw hyperplane
+            eID = self.graph.add_line(drawLow, drawUp, [0,1,0], "orange")
+            Cal_HpEdge = [drawLow, drawUp, hpedge[2], hpedge[3], hpLow, hpUp, eID]
+            self.hpedges.append(Cal_HpEdge)
+            self.uiapp.stop()
+
+            # Wipe : 找出碰到的第一條線段 並 擦除不要的部分
+            delFlagDir = 0
+            self.graph.clear_lineID(touchLine[6])
+            po = intersection
+            pa = touchLine[2]
+            pl = touchLine[4]
+            pr = touchLine[5]
+            OA = [pa[0] - po[0], pa[1] - po[1]]
+            OL = [pl[0] - po[0], pl[1] - po[1]]
+            OR = [pr[0] - po[0], pr[1] - po[1]]
+            # find the cos of OA, OL and OA, OR
+            cosL = (OA[0] * OL[0] + OA[1] * OL[1]) / (math.hypot(*OA) * math.hypot(*OL))
+            cosR = (OA[0] * OR[0] + OA[1] * OR[1]) / (math.hypot(*OA) * math.hypot(*OR))
+            if (cosL < 0): # delete left part
+                delFlagDir = 1
+            else: # delete right part
+                delFlagDir = -1
+            # delete the part of the line and delete from data structure, TODO delete from vor ... and so on
+            afterWipeUp = intersection
+            afterWipeLow = []
+            if (delFlagDir == 1):
+                afterWipeLow = pr
+            else:
+                afterWipeLow = pl
+            afterWipeDrawLow, afterWipeDrawUp = self.graph.clip_line(afterWipeLow, afterWipeUp)
+            eID = self.graph.add_line(afterWipeDrawLow, afterWipeDrawUp, [0,1,0], "orange")
+            NewTouchLine = [afterWipeDrawLow, afterWipeDrawUp, touchLine[2], touchLine[3], afterWipeLow, afterWipeUp, eID]
+            self.hpedges.append(NewTouchLine)
+            self.uiapp.stop() 
+
+
             
+            # TYPE -> hpedge = [low_drawEdge[0], Up_drawEdge[1], lower[0], lower[1], low_drawEdge[4], Up_drawEdge[5], eID]
+
+            # 由intersection向下畫線
+            
+        print('out of looop 936')
 
 
         self.uiapp.stop()
         self.hpedges.clear()
 
-
-    def wipe_line(self):
-        # print("wipe")
-        pass
-    
     # return self.convex_hull(points), EdgePoints # TODO modify return structure
     def compute_voronoi_three(self, points):
         # store edges return
