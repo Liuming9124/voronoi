@@ -234,6 +234,8 @@ class Graph():
     def clear_all(self):
         """清除畫布上所有物件，並重置點列表。"""
         self.canvas.delete("all")  # 清除畫布上的所有物件
+        self.canvas.delete("line")
+        self.canvas.delete("point")
         self.points_id = []  # 清空點 id 列表
         self.points = []
         self.edges = []   # 清空邊列表
@@ -381,16 +383,20 @@ class Graph():
             if (x1 == x2):
                 a = None
                 b = None
+                print("findLine error", a, b)
             else:
                 a = (y2 - y1) / (x2 - x1)
                 b = y1 - a * x1
             return [a, b]
 
-    # 透過兩條線找出交點 回傳: 兩條線的交點
+    # 透過兩條線找出交點 回傳: 兩條線的交點 TODO bug: check a1, a2 with NoneType
     def find_intersection(self, a1, b1, a2, b2):
         # a1, b1: 第一條線的斜率和截距
         # a2, b2: 第二條線的斜率和截距
-        print(f"find_intersection: {a1, b1, a2, b2}")
+        # print(f"find_intersection: {a1, b1, a2, b2}")
+        if a1 is None and b1 is None or a2 is None and b2 is None:
+            print('find_intersection() error: 兩條線無法找出交點')
+            return None
 
         if (a1 == a2):
             if (b1 == b2):
@@ -426,7 +432,14 @@ class Graph():
         else:
             a2 = -(x1 - x2) / (y1 - y2)
             b2 = ym - a2 * xm
-        Point = self.find_intersection(a1, b1, a2, b2)
+
+        Point = []
+        if (a1 == None):
+            x = mid_L1[0]
+            y = a2 * x + b2
+            Point = [x, y]
+        else:
+            Point = self.find_intersection(a1, b1, a2, b2)
 
         if (self.distance(Point, P_large) < self.distance(mid_12, P_large)):
             return [ Point, Center, [0,0,1]]
@@ -493,48 +506,89 @@ class Graph():
 
     # 計算點是否有在線段上 -> return True or False
     def pointOnLine(self, point, line_point1, line_point2):
+        if test and test_index <= 1:
+            print(f"------------pointOnLine show------------")
+            print(f"point: {point}")
+            print(f"line_point1: {line_point1}")
+            print(f"line_point2: {line_point2}")
+            print(f"------------pointOnLine end------------")
+
+        # 精度問題 -> round 4 位
         if (point == line_point1 or point == line_point2):
-            return True
+            return False # TODO 正多邊形的特例
         online_flag = False
         onpart_flag = False
         slope, b = self.find_line(line_point1, line_point2)
         if (slope == None):
-            if (point[0] == line_point1[0]):
+            if (round(point[0],4) == round(line_point1[0], 4)):
                 online_flag = True
+                print(f"online_flag: {online_flag}")
         else:
-            if (point[1] == slope * point[0] + b):
+            if (round(point[1], 4) == round(slope * point[0] + b, 4)):
                 online_flag = True
+                print(f"online_flag: {online_flag}")
+            else:
+                online_flag = False
+                print(f'{point[1]} != {slope} * {point[0]} + {b} = {slope * point[0] + b}')
+        print(f"dbcheck pointOnLine: {online_flag}")
         if (online_flag):
-            if ((point[0] >= min(line_point1[0], line_point2[0]) and point[0] <= max(line_point1[0], line_point2[0])) and 
-                (point[1] >= min(line_point1[1], line_point2[1]) and point[1] <= max(line_point1[1], line_point2[1]))):
+            if ((point[0] >= min(line_point1[0], line_point2[0]) and (point[0] <= max(line_point1[0], line_point2[0]))) and 
+                (point[1] >= min(line_point1[1], line_point2[1]) and (point[1] <= max(line_point1[1], line_point2[1])))):
                 onpart_flag = True
+                print(f"onpart_flag: {onpart_flag}")
+        print(f"pointOnLine: {online_flag, onpart_flag}")
         return onpart_flag
 
-    # 計算兩線段是否有交點 -> return [T or F, [x, y]]
+    # 計算兩線段是否有交點 -> return [T or F, [x, y]]  TODO check return , ERROR
     def intersectionTwoLineparts(self, line1, line2):
-        # line1, line2: 兩條線段的座標 ; 回傳: 是否有交點, 交點座標
+        # print("intersection in")
+        # line1, line2: 兩條線段的座標 ; 回傳: 是否有交點, 交點座標 # TODO 垂直線例外處理 maybe finished
         slope1, b1 = self.find_line(line1[0], line1[1])
         slope2, b2 = self.find_line(line2[0], line2[1])
-        intersection = self.find_intersection(slope1, b1, slope2, b2)
+        # 找出交點
+        intersection = []
+        if (slope1 == slope2): # 例外處理
+            if (b1 == b2): # 兩條線平行
+                print("intersectionTwoLineparts error: 共線")
+            else: # 兩條線垂直
+                print("intersectionTwoLineparts error: 平行")
+            return [False, []]
+        elif (slope1 == None):
+            x = line1[0][0]
+            y = slope2 * x + b2
+            intersection = [x, y]
+        elif (slope2 == None):
+            x = line2[0][0]
+            y = slope1 * x + b1
+            intersection = [x, y]
+        else:
+            intersection = self.find_intersection(slope1, b1, slope2, b2)
+        print(f"intersectionTwoLineparts: find-> {intersection}")
         if (intersection == None):
             return [False, []]
         else:
-            if (self.pointOnLine(intersection, line1[0], line1[1]) and self.pointOnLine(intersection, line2[0], line2[1])):
+            # print(intersection, line1[0], line1[1], line2[0], line2[1])
+            print("---------------------------------------------------------------------------------------------")
+            status1 = self.pointOnLine(intersection, line1[0], line1[1])
+            status2 = self.pointOnLine(intersection, line2[0], line2[1])
+            print("status1, status2", status1, status2)
+            if (status1 and status2):
+                print(status1, intersection, line1[0], line1[1])
+                print(status2, intersection, line2[0], line2[1])
+                print("---------------------------------------------------------------------------------------------")
                 return [True, intersection]
             else:
+                print("---------------------------------------------------------------------------------------------")
                 return [False, []]
-
-    # # from upper to lower to find the first intersection point and line -> return first intersection point and line
-    # def find_first_intersedction(self, line, vor): # TODO ondo
-    #     line_p1, line_p2 = line
-    #     # input two points of line and from upper to lower to scan for the first intersection point
-    #     intersections = []
-    #     for i in range(len(vor)):
-    #         if (self.pointOnLine(vor[i][0], line_p1, line_p2) or self.pointOnLine(vor[i][1], line_p1, line_p2)):
-    #             intersections.append(vor[i])
+            # return [False, []]
+            # if (self.pointOnLine(intersection, line1[0], line1[1]) and self.pointOnLine(intersection, line2[0], line2[1])):
+            #     print("return intersection", intersection)
+            #     print("---------------------------------------------------------")
+            #     return [True, intersection]
+            # else: 
+            #     print("---------------------------------------------------------")
+            #     return [False, []]
             
-        
-        return []
 # calculate---------------------------------------------------------------------------------------------------------------
 class voronoi():
     def __init__(self, canvas, graph, uiapp):
@@ -564,7 +618,6 @@ class voronoi():
         self.lvor.clear()
         self.rvor.clear()
         self.vor.clear()
-
 
     def compute_voronoi(self):
         if (len(self.graph.points) <=1):
@@ -651,20 +704,20 @@ class voronoi():
             else:
                 self.ch.append(self.graph.add_line(merge_ch[0], merge_ch[i], [0, 1, 0]))
         # draw voronoi left and right
-        print("-------------------------------------")
-        print(len(self.lvor))
-        for vor in self.lvor:
-            print(vor)
+        print("---------------vorstart-------------")
+        print('self.lvor', len(self.lvor))
+        # for vor in self.lvor:
+        #     print(vor)
         for i in range(len(self.lvor)):
             # draw
-            print(self.lvor[i])
+            # print(self.lvor[i])
             eID = self.graph.add_line(self.lvor[i][0], self.lvor[i][1], [0,1,0])
             self.lvor[i][6] = eID
-        for vor in self.rvor:
-            print(vor)
+        # for vor in self.rvor:
+        #     print(vor)
         for i in range(len(self.rvor)):
             # draw
-            print(self.rvor[i])
+            # print(self.rvor[i])
             eID = self.graph.add_line(self.rvor[i][0], self.rvor[i][1], [0,1,0])
             self.rvor[i][6] = eID
         print("--------------end--------------------")
@@ -674,6 +727,8 @@ class voronoi():
             self.graph.clear_lineID(id)
         self.ch.clear()
 
+
+        self.vor = self.lvor + self.rvor
         self.hyper_plane(lower, upper)
         # self.wipe_line()
         # voronoi
@@ -708,7 +763,7 @@ class voronoi():
 
         self.uiapp.stop()
         self.graph.clear_lines()
-        return ch #, chEdges # TODO !!!!! hurry
+        return ch #, chEdges # TODO must finished
     
     # return angle -> polar angle with respect to the base point
     def angle(self, o, p):  # calculate polar angle with respect to the base point
@@ -816,23 +871,56 @@ class voronoi():
     
     def hyper_plane(self, lower, upper):
         # draw lower and upper tangent
-        if test:
+        if test and test_index <= 2:
+            # self.graph.add_line(lower[0], lower[1], [0, 1, 0], 'red')
             self.graph.add_line(lower[0], lower[1], [0, 1, 0], 'red')
-            # self.graph.add_line(upper[0], upper[1], [0, 1, 0], 'red')
         # use the perpendicular line to find the hyperplane -> use lower
         drawEdge = self.graph.add_perpendicular_line(lower[0], lower[1])
         eID = self.canvas.create_line(drawEdge[0][0], drawEdge[0][1], drawEdge[1][0], drawEdge[1][1], fill="green", tags="line")
+        # 第一次會與lower_tangent相交
         hpedge = [drawEdge[0], drawEdge[1], lower[0], lower[1], drawEdge[4], drawEdge[5], eID]
 
         
         # from upper to lower to find the first intersection point and line -> return first intersection point and line
-        # intersectionTwoLineparts
+        # 最多交集len(vor)條線段
+        print('vor:', len(self.vor))
+        for i in range(len(self.vor)):
+            # print(f'vor {i}:', self.vor[i])
+            intersections_flag = False
+            intersections = []
+            for j in range(len(self.vor)):
+                # use intersectionTwoLineparts to find intersection point
+                # if (i == j):
+                #     continue
+                # self.uiapp.stop()
+                print('----', hpedge, '----')
+                print('----', self.vor[j], '----')
+                if (test and test_index <= 2):
+                    self.graph.add_line(self.vor[j][0], self.vor[j][1], [0, 1, 0], 'orange')
+                    # self.uiapp.stop()
+                intersection_flag = False
+                intersection_flag, intersection = self.graph.intersectionTwoLineparts( [hpedge[4], hpedge[5]], [self.vor[j][4], self.vor[j][5]]) # 計算兩線段是否有交點 -> return [T or F, [x, y]]
+                if (intersection_flag):
+                    intersections_flag = True
+                    if (test and test_index <= 2):
+                        self.canvas.create_oval(intersection[0] - 3, intersection[1] - 3, intersection[0] + 3, intersection[1] + 3, fill='blue')
+                        # self.uiapp.stop()
+                    intersections.append(intersection)
+            if test and test_index <= 2:
+                # self.uiapp.stop()
+                if (intersections_flag):
+                    print(intersections)
+            # 如果有找到交點，則找出最近的交點，由上往下找
+            if (intersections_flag):
+                # sort intersection by y
+                if test and test_index <= 3:
+                    self.uiapp.stop()
+                intersections.sort(key=lambda x: x[1])
+                intersection = intersections[0]
+                self.canvas.create_oval(intersection[0] - 3, intersection[1] - 3, intersection[0] + 3, intersection[1] + 3, fill='yellow')
+            print(f'intersections: {intersections}')
+            
 
-        # while True:
-        #     for i in range(len(self.vor)):
-        #         print(f'vor {i}:', self.vor[i])
-        #         if (self.pointOnLine(self.vor[i][0], lower[0], lower[1]) or self.pointOnLine(self.vor[i][1], lower[0], lower[1])):
-        #             intersections.append(self.vor[i])
 
         self.uiapp.stop()
         self.hpedges.clear()
@@ -909,8 +997,6 @@ class voronoi():
         # 三點不共線
         else:
             center_x, center_y = self.graph.circumcenter(points[0], points[1], points[2])
-            # if (test and test_index <= 1): # 畫出外心
-            #     self.graph.add_point((center_x, center_y), 'blue')
             # 找出三邊的中點
             x1, y1 = self.graph.midpoint(points[0], points[1])
             x2, y2 = self.graph.midpoint(points[1], points[2])
@@ -920,7 +1006,7 @@ class voronoi():
             drawEdges = self.graph.cal_triangle_line((center_x, center_y), points[0], points[1], points[2], (x1, y1), (x2, y2), (x3, y3))
             for edge in drawEdges: # edge =  (mid, one, status, point1, point2)
                 EdgePoint = []
-                dx1, dy1, dx2, dy2 = self.graph.calculate_line_endpoints(edge[0], edge[1], edge[2]) # [dx1, dy1, dx2, dy2]
+                dx1, dy1, dx2, dy2 = self.graph.calculate_line_endpoints(edge[0], edge[1], edge[2]) # [dx1, dy1, dx2, dy2] # TODO clip bug maybe finished
                 Point1 = [dx1, dy1]
                 Point2 = [dx2, dy2]
                 # [draw1, draw2, point_a, point_b, edge_piont1, edge_point2, id]
@@ -929,6 +1015,10 @@ class voronoi():
                 eID = self.graph.add_line(draw1, draw2, [0, 1, 0])
                 EdgePoint.extend([draw1, draw2, edge[3], edge[4], Point1, Point2, eID])
                 EdgePoints.append(EdgePoint)
+                if test and test_index <= 1:
+                    print(f"EdgePoint: {EdgePoint}")
+                # print(EdgePoint)
+                # self.uiapp.stop()
                 self.graph.edges.append(EdgePoint)
 
         return self.convex_hull(points), EdgePoints
@@ -1167,7 +1257,7 @@ class UiApp:
 
 # main---------------------------------------------------------------------------------------------------------------
 test = True
-test_index = 2
+test_index = 3
 
 if __name__ == "__main__":
     # 設定長寬
