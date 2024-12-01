@@ -891,7 +891,9 @@ class voronoi():
         if test and test_index <= 2:
             print('vor:', len(self.vor))
         skipID = -1
-        while(not end_flag):
+        oldtouchLine = []
+        last_intersection = []
+        while(not end_flag): # TODO when end_Flag is true, operate the last intersection of hyperplane
             intersections_flag = False
             intersections = []
             touchLine = []
@@ -935,71 +937,14 @@ class voronoi():
             hpUp = intersection
             drawLow, drawUp = self.graph.clip_line(hpLow, hpUp)
 
-            print('drawLow, drawUp, hpLow, hpUp')
-            print(drawLow, drawUp, hpLow, hpUp)
+            # print('drawLow, drawUp, hpLow, hpUp')
+            # print(drawLow, drawUp, hpLow, hpUp)
             # self.uiapp.stop()
             # clip, store and draw hyperplane TODO add line after
             eID = self.graph.add_line(drawLow, drawUp, [0,1,0], "orange")
             Cal_HpEdge = [drawLow, drawUp, hpedge[2], hpedge[3], hpLow, hpUp, eID]
             newHpedges.append(Cal_HpEdge)
             # self.uiapp.stop()
-
-          # Wipe : 找出碰到的第一條voronoi線段 並 擦除不要的部分: 遠離非共線的點
-            delFlagDir = 0
-            self.graph.clear_lineID(touchLine[6])
-            po = intersection
-            pa = touchLine[2]
-            pl = touchLine[4]
-            pr = touchLine[5]
-            if test and test_index <= 2:
-                a = self.canvas.create_oval(pa[0] - 5, pa[1] - 5, pa[0] + 5, pa[1] + 5, fill='yellow')
-                b = self.canvas.create_oval(po[0] - 5, po[1] - 5, po[0] + 5, po[1] + 5, fill='black')
-                c = self.canvas.create_oval(touchLine[0][0] - 5, touchLine[0][1] - 5, touchLine[0][0] + 5, touchLine[0][1] + 5, fill='green')
-                d = self.canvas.create_oval(touchLine[1][0] - 5, touchLine[1][1] - 5, touchLine[1][0] + 5, touchLine[1][1] + 5, fill='red')
-                self.uiapp.stop()
-                self.canvas.delete(a)
-                self.canvas.delete(b)
-                self.canvas.delete(c)
-                self.canvas.delete(d)
-            OA = [pa[0] - po[0], pa[1] - po[1]]
-            OL = [pl[0] - po[0], pl[1] - po[1]]
-            OR = [pr[0] - po[0], pr[1] - po[1]]
-            # find the cos of OA, OL and OA, OR
-            cosL = (OA[0] * OL[0] + OA[1] * OL[1]) / (math.hypot(*OA) * math.hypot(*OL))
-            cosR = (OA[0] * OR[0] + OA[1] * OR[1]) / (math.hypot(*OA) * math.hypot(*OR))
-            if test:
-                print('cosL, cosR', cosL, cosR)
-
-            if (cosL < 0): # delete left part # 一正一負 負的要刪除
-                delFlagDir = 1
-            elif(cosR < 0): # delete right part
-                delFlagDir = -1
-          # delete the part of the line and delete from data structure, TODO delete from (vor:already delete from voronoi) ... and so on
-            afterWipeUp = intersection
-            afterWipeLow = []
-            if (delFlagDir == 1):
-                afterWipeLow = pr
-            else:
-                afterWipeLow = pl
-            oldID = touchLine[6]
-            afterWipeDrawLow, afterWipeDrawUp = self.graph.clip_line(afterWipeLow, afterWipeUp)
-            self.uiapp.stop()
-            eID = self.graph.add_line(afterWipeDrawLow, afterWipeDrawUp, [0,1,0], "blue")
-            skipID = eID
-            NewTouchLine = [afterWipeDrawLow, afterWipeDrawUp, touchLine[2], touchLine[3], afterWipeLow, afterWipeUp, eID]
-            self.canvas.create_line(afterWipeDrawLow[0], afterWipeDrawLow[1], afterWipeDrawUp[0], afterWipeDrawUp[1], fill="blue", tags="line")
-            print('--------------------------------------------------------------')
-            print('oldID', oldID)
-            for i in range(len(self.vor)):
-                print(self.vor[i])
-                if self.vor[i][6] == oldID:
-                    self.vor[i] = NewTouchLine
-            print('--------------------------------------------------------------')
-            for edge in self.vor:
-                print(edge)
-            print('--------------------------------------------------------------')
-            print(self.vor)
-            self.uiapp.stop()
 
           # define new footl and footr
             newFoot = []
@@ -1056,6 +1001,77 @@ class voronoi():
             # TYPE -> hpedge = [low_drawEdge[0], Up_drawEdge[1], lower[0], lower[1], low_drawEdge[4], Up_drawEdge[5], eID]
 
             # 由intersection向下畫線
+                      # Wipe : 找出碰到的第一條voronoi線段 並 擦除不要的部分: 遠離非共線的點
+            if (intersection==[]):
+                last_intersection = intersection
+                oldtouchLine = touchLine
+            else:
+                delFlagDir = 0
+                self.graph.clear_lineID(touchLine[6])
+                po = intersection
+                pa = touchLine[2]
+                pl = touchLine[4]
+                pr = touchLine[5]
+                if test and test_index <= 2:
+                    a = self.canvas.create_oval(pa[0] - 5, pa[1] - 5, pa[0] + 5, pa[1] + 5, fill='yellow')
+                    b = self.canvas.create_oval(po[0] - 5, po[1] - 5, po[0] + 5, po[1] + 5, fill='black')
+                    c = self.canvas.create_oval(touchLine[0][0] - 5, touchLine[0][1] - 5, touchLine[0][0] + 5, touchLine[0][1] + 5, fill='green')
+                    d = self.canvas.create_oval(touchLine[1][0] - 5, touchLine[1][1] - 5, touchLine[1][0] + 5, touchLine[1][1] + 5, fill='red')
+                    self.uiapp.stop()
+                    self.canvas.delete(a)
+                    self.canvas.delete(b)
+                    self.canvas.delete(c)
+                    self.canvas.delete(d)
+                OA = [pa[0] - po[0], pa[1] - po[1]]
+                OL = [pl[0] - po[0], pl[1] - po[1]]
+                OR = [pr[0] - po[0], pr[1] - po[1]]
+                # find the cos of OA, OL and OA, OR
+                cosL = (OA[0] * OL[0] + OA[1] * OL[1]) / (math.hypot(*OA) * math.hypot(*OL))
+                cosR = (OA[0] * OR[0] + OA[1] * OR[1]) / (math.hypot(*OA) * math.hypot(*OR))
+
+                # 找出 hpLow to hpUp 的向量
+                hpVec = [hpUp[0] - hpLow[0], hpUp[1] - hpLow[1]]
+                # 找出 前一個hpedge的向量
+                lastVec = [newHpedges[-1][4][0] - newHpedges[-1][5][0], newHpedges[-1][4][1] - newHpedges[-1][5][1]]
+                # 找出 hpVec 及 lastVec 的cos
+                cosHpVecLastVec = (hpVec[0] * lastVec[0] + hpVec[1] * lastVec[1]) / (math.hypot(*hpVec) * math.hypot(*lastVec))
+
+                if test:
+                    print('cosL, cosR', cosL, cosR)
+
+                if (cosL * cosHpVecLastVec > 0): # delete left part # 一正一負 負的要刪除
+                    delFlagDir = 1
+                elif(cosR * cosHpVecLastVec > 0): # delete right part
+                    delFlagDir = -1
+            # delete the part of the line and delete from data structure, TODO delete from (vor:already delete from voronoi) ... and so on
+                afterWipeUp = intersection
+                afterWipeLow = []
+                if (delFlagDir == 1):
+                    afterWipeLow = pr
+                else:
+                    afterWipeLow = pl
+                oldID = touchLine[6]
+                afterWipeDrawLow, afterWipeDrawUp = self.graph.clip_line(afterWipeLow, afterWipeUp)
+                self.uiapp.stop()
+                eID = self.graph.add_line(afterWipeDrawLow, afterWipeDrawUp, [0,1,0], "blue")
+                skipID = eID
+                NewTouchLine = [afterWipeDrawLow, afterWipeDrawUp, touchLine[2], touchLine[3], afterWipeLow, afterWipeUp, eID]
+                self.canvas.create_line(afterWipeDrawLow[0], afterWipeDrawLow[1], afterWipeDrawUp[0], afterWipeDrawUp[1], fill="blue", tags="line")
+                print('--------------------------------------------------------------')
+                print('oldID', oldID)
+                for i in range(len(self.vor)):
+                    print(self.vor[i])
+                    if self.vor[i][6] == oldID:
+                        self.vor[i] = NewTouchLine
+                print('--------------------------------------------------------------')
+                for edge in self.vor:
+                    print(edge)
+                print('--------------------------------------------------------------')
+                print(self.vor)
+                self.uiapp.stop()
+                last_intersection = intersection
+                oldtouchLine = touchLine
+
         
         
         # 遍歷所有voronoi線段，找出Orphan Edge並刪除，orphan edge: 兩端點皆沒有和voronoi的兩端點相同相交
@@ -1074,11 +1090,6 @@ class voronoi():
         self.uiapp.stop()
         for i in range(len(self.vor)):
             connect = 0
-            # print('self.vor[i]', self.vor[i])
-            # print('self.vor[i][4]', self.vor[i][4])
-            # print('self.vor[i][5]', self.vor[i][5])
-            # print('self.vor[i][4][0]', self.vor[i][4][0], round(self.vor[i][4][0], 4))
-            # print('self.vor[i][4][1]', self.vor[i][4][1], round(self.vor[i][4][1], 4))
             for j in range(len(allVertex)):
                 if ((round(self.vor[i][4][0], 4) == round(allVertex[j][0], 4)) and (round(self.vor[i][4][1], 4) == round(allVertex[j][1], 4))):
                     connect += 1
