@@ -122,6 +122,8 @@ class Graph():
     def add_line(self, point1, point2, edge_status, color='blue'): # edge_status = [left, mid, right] -> left=1 : <-1 2, mid=1 : 1-2, right=1 : 1 2-> ; excaption [0,0,0] means perpendicular line 
         dx1, dy1, dx2, dy2 = self.calculate_line_endpoints(point1, point2, edge_status)
         canvasP = self.clip_line((dx1, dy1), (dx2, dy2))
+        if (canvasP == None):
+            return None
         canvas_x1, canvas_y1 = canvasP[0]
         canvas_x2, canvas_y2 = canvasP[1]
 
@@ -132,11 +134,15 @@ class Graph():
 
     # 裁切線段回傳畫布上兩端點 -> return [[x1, y1], [x2, y2]]
     def clip_line(self, point1, point2):
+
         line_a, line_b = self.find_line(point1, point2)
         x1, y1 = point1
         x2, y2 = point2
         canvas_x1, canvas_y1 = point1
         canvas_x2, canvas_y2 = point2
+        # 如果整條線段都在畫布外，則不畫
+        if ((x1<0 or x1>self.width) and (x2<0 or x2>self.width) and (y1<0 or y1>self.length) and (y2<0 or y2>self.length)):
+            return None
 
         if line_a is None:  # 處理垂直線的邊界
             if y1 < 0:
@@ -310,6 +316,8 @@ class Graph():
             canvas_y2 = perp_slope * canvas_x2 + b
             
         canvasP = self.clip_line((canvas_x1, canvas_y1), (canvas_x2, canvas_y2))
+        if (canvasP == None):
+            return None
         canvas_x1, canvas_y1 = canvasP[0]
         canvas_x2, canvas_y2 = canvasP[1]
 
@@ -340,9 +348,9 @@ class Graph():
     def lineOtherPoint(self, point, line_slope, line_b, dir='x'):
         x, y = point
         if (line_slope == None):
-            return (x+1, 0)
+            return (x, maxsize)
         elif (line_slope == 0):
-            return (0, y+1)
+            return (maxsize, y)
         else:
             if (dir=='x'):
                 new_x = maxsize
@@ -423,34 +431,14 @@ class Graph():
 
     # return [ Point, Center, [0,0,1]]
     def find_line_degreeMoreThan90(self, Center, P_large, P1, P2, mid_L1, mid_L2, mid_12):
-        xm, ym = mid_12
-        x1, y1 = P1
-        x2, y2 = P2
-        
-        # line 1 create from other two mid points
-        a1, b1 = self.find_line(mid_L1, mid_L2)
-        # 找出 Mid 投影到線 y = a1x + b1 的點
-        # 找出 p1, p2 的中垂線 TODO : 有兩點垂直或水平的情況 , ondo
-        if (y1 == y2):
-            a2 = None
-            b2 = ym
+        line1 = (self.add_perpendicular_line(P1, P2))[4:6]
+        line2 = [mid_L1, mid_L2]
+        Point = self.intersectionTwoLineparts(line1, line2)
+        if (Point[0]):
+            return [ Point[1], Center, [0,0,1]]
         else:
-            a2 = -(x1 - x2) / (y1 - y2)
-            b2 = ym - a2 * xm
+            print("find_line_degreeMoreThan90 error: no intersection")
 
-        Point = []
-        if (a1 == None):
-            x = mid_L1[0]
-            y = a2 * x + b2
-            Point = [x, y]
-        else:
-            Point = self.find_intersection(a1, b1, a2, b2)
-
-        if (self.distance(Point, P_large) < self.distance(mid_12, P_large)):
-            return [ Point, Center, [0,0,1]]
-        else:
-            return [ Center, Point, [0,1,1]]
-    
     # 判斷三角形並找出要畫的線段
     # return 三組欲畫的線段，[(mid, one, status, point1, point2), (mid, two, status, point1, point2), (mid, three, status, point1, point2)]
     def cal_triangle_line(self, Center, A, B, C, ab, bc, ac): # 中點 Mid; 頂點A, B, C ; 三邊中點 ab, bc, ac => return 三組欲畫的線段，[(mid, one, status), (mid, two, status), (mid, three, status)]
@@ -487,6 +475,7 @@ class Graph():
                 edges.append([Center, bc, [0,1,1], B, C])
                 edges.append([Center, ac, [0,1,1], A, C])
                 edgeFind = self.find_line_degreeMoreThan90(Center, C, A, B, bc, ac, ab)
+                print(edgeFind)
                 edgeFind.append(A)
                 edgeFind.append(B)
                 edges.append(edgeFind)
@@ -495,6 +484,7 @@ class Graph():
                 edges.append([Center, ab, [0,1,1], A, B])
                 edges.append([Center, ac, [0,1,1], A, C])
                 edgeFind = self.find_line_degreeMoreThan90(Center, A, B, C, ab, ac, bc)
+                print(edgeFind)
                 edgeFind.append(B)
                 edgeFind.append(C)
                 edges.append(edgeFind)
@@ -503,6 +493,7 @@ class Graph():
                 edges.append([Center, ab, [0,1,1], A, B])
                 edges.append([Center, bc, [0,1,1], B, C])
                 edgeFind = self.find_line_degreeMoreThan90(Center, B, A, C, ab, bc, ac)
+                print(edgeFind)
                 edgeFind.append(A)
                 edgeFind.append(C)
                 edges.append(edgeFind)
@@ -546,7 +537,7 @@ class Graph():
 
     # 計算兩線段是否有交點 -> return [T or F, [x, y]]  TODO check return , ERROR
     def intersectionTwoLineparts(self, line1, line2):
-        # print("intersection in")
+        print("intersection in", line1, line2)
         # line1, line2: 兩條線段的座標 ; 回傳: 是否有交點, 交點座標 # TODO 垂直線例外處理 maybe finished
         slope1, b1 = self.find_line(line1[0], line1[1])
         slope2, b2 = self.find_line(line2[0], line2[1])
@@ -875,7 +866,7 @@ class voronoi():
     
     def hyper_plane(self, lower, upper):
         # draw lower and upper tangent
-        if test and test_index <= 3:
+        if test and test_index <= 2:
             # self.graph.add_line(lower[0], lower[1], [0, 1, 0], 'red')
             self.graph.add_line(lower[0], lower[1], [0, 1, 0], 'green')
         # use the perpendicular line to find the hyperplane -> use lower
@@ -937,6 +928,7 @@ class voronoi():
 
             hpUp = intersection
             drawLow, drawUp = self.graph.clip_line(hpLow, hpUp)
+
             print('drawLow, drawUp, hpLow, hpUp')
             print(drawLow, drawUp, hpLow, hpUp)
             # self.uiapp.stop()
@@ -1007,7 +999,7 @@ class voronoi():
             print('oldFoot', footl, footr)
             print('newFoot', newFoot)
             footl, footr = newFoot[0], newFoot[1]
-            if test and test_index <= 2:
+            if test and test_index <= 3:
                 self.graph.add_line(footl, footr, [0, 1, 0], 'black')
             # self.uiapp.stop()
           # define new lower and upper
@@ -1018,8 +1010,17 @@ class voronoi():
             self.uiapp.stop()
             
             point = self.graph.lineOtherPoint(intersection, slope, b, 'y')
+            print('intersection', intersection)
+            print('point', point)
+            self.uiapp.stop()
+            if slope == 0:
+                point[0] = intersection[0]
+                point[1] = maxsize
+            if test and test_index <= 3:
+                self.graph.add_line(intersection, point, [0, 1, 1], 'purple')
+                self.uiapp.stop()
             print('point', intersection, point)
-            # self.graph.add_line(intersection, point, [0, 1, 1], 'purple')
+            
             # self.uiapp.stop()
 
             px1, py1, px2, py2 = self.graph.calculate_line_endpoints(intersection, point, [0, 1, 1])
@@ -1139,6 +1140,8 @@ class voronoi():
                 # clip edge
                 draw1, draw2 = self.graph.clip_line(Point1, Point2)
                 eID = self.graph.add_line(draw1, draw2, [0, 1, 0])
+                if eID==None:
+                    print('error')
                 EdgePoint.extend([draw1, draw2, edge[3], edge[4], Point1, Point2, eID])
                 EdgePoints.append(EdgePoint)
                 if test and test_index <= 1:
