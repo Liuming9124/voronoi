@@ -4,6 +4,8 @@ from tkinter import filedialog
 import math
 maxsize = 1000000000
 
+# TODO Build, Exception of four points
+
 # variable----------------------------------------------------------------------------------------------------------------
 class Graph():
     def __init__(self, canvas, Width, Length):
@@ -142,7 +144,7 @@ class Graph():
         canvas_x2, canvas_y2 = point2
         # 如果整條線段都在畫布外，則不畫
         if ((x1<0 or x1>self.width) and (x2<0 or x2>self.width) and (y1<0 or y1>self.length) and (y2<0 or y2>self.length)):
-            return None
+            return [[0, 0], [0, 0]]
 
         if line_a is None:  # 處理垂直線的邊界
             if y1 < 0:
@@ -918,8 +920,9 @@ class voronoi():
                 intersection = intersections[0][0]
                 touchLine = intersections[0][1]
                 if skipID == intersections[0][1][6]:
-                    intersection = intersections[1][0]
-                    touchLine = intersections[1][1]
+                    if len(intersections) > 1:  # TODO HURRY last hyperplane
+                        intersection = intersections[1][0]
+                        touchLine = intersections[1][1]
                 # intersection = intersections[0]
                 if test and test_index <= 2: # TODO not operate out of boundary
                     self.canvas.create_oval(intersection[0] - 3, intersection[1] - 3, intersection[0] + 3, intersection[1] + 3, fill='yellow')
