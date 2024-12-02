@@ -912,7 +912,7 @@ class voronoi():
                         self.canvas.create_oval(intersection[0] - 3, intersection[1] - 3, intersection[0] + 3, intersection[1] + 3, fill='blue')
                         # self.uiapp.stop()
                     intersections.append([intersection, self.vor[j]])
-          # 如果有找到交點，則找出最近的交點，由lower往upper找
+            # 如果有找到交點，則找出最近的交點，由lower往upper找
             if (intersections_flag):
                 # sort intersection by y
                 # intersections.sort(key=lambda x: x[1])
@@ -928,12 +928,24 @@ class voronoi():
                     self.canvas.create_oval(intersection[0] - 3, intersection[1] - 3, intersection[0] + 3, intersection[1] + 3, fill='yellow')
                     # self.uiapp.stop()
             else:
+                # the last hyperplane
                 end_flag = True
-                newHpedges.append(hpedge)
+                # draw last hyperplane
+                drawEdge = self.graph.add_perpendicular_line(upper[0], upper[1])
+                # sort drawEdge, y1 < y2
+                if drawEdge[4][1] > drawEdge[5][1]:
+                    drawEdge[4], drawEdge[5] = drawEdge[5], drawEdge[4]
+                    drawEdge[0], drawEdge[1] = drawEdge[1], drawEdge[0]
+                drawEdge[1] = drawEdge[5] = last_intersection
+                
+                eID = self.canvas.create_line(drawEdge[0][0], drawEdge[0][1], drawEdge[1][0], drawEdge[1][1], fill="green", tags="line")
+                drawEdge.append(eID)
+                newHpedges.append(drawEdge)
+
                 print('-------------------end_flag-------------------')
                 self.uiapp.stop()
                 break
-          # 先處理前一個hyperplane  # TYPE -> hpedge = [low_drawEdge[0], Up_drawEdge[1], footl[0], footr[1], low_drawEdge[4], Up_drawEdge[5], eID]
+            # 先處理前一個hyperplane  # TYPE -> hpedge = [low_drawEdge[0], Up_drawEdge[1], footl[0], footr[1], low_drawEdge[4], Up_drawEdge[5], eID]
             self.graph.clear_lineID(hpedge[6])
             self.uiapp.stop()
 
@@ -949,7 +961,7 @@ class voronoi():
             newHpedges.append(Cal_HpEdge)
             # self.uiapp.stop()
 
-          # define new footl and footr
+            # define new footl and footr
             newFoot = []
             newFootCandidate = [touchLine[2], touchLine[3]]
             if ((newFootCandidate[0] == footl) or (newFootCandidate[1] == footl)):
@@ -970,7 +982,7 @@ class voronoi():
             if test and test_index <= 3:
                 self.graph.add_line(footl, footr, [0, 1, 0], 'black')
             # self.uiapp.stop()
-          # define new lower and upper
+            # define new lower and upper
             slope, b = self.graph.find_perpendicular_line(footl, footr)
             print('-----------------------------')
             print('slope, b', slope, b)
@@ -1046,7 +1058,7 @@ class voronoi():
                     delFlagDir = 1
                 elif(cosR * cosHpVecLastVec > 0): # delete right part
                     delFlagDir = -1
-            # delete the part of the line and delete from data structure, TODO delete from (vor:already delete from voronoi) ... and so on
+                # delete the part of the line and delete from data structure, TODO delete from (vor:already delete from voronoi) ... and so on
                 afterWipeUp = intersection
                 afterWipeLow = []
                 if (delFlagDir == 1):
