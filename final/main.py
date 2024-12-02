@@ -712,14 +712,14 @@ class voronoi():
         for i in range(len(self.lvor)):
             # draw
             # print(self.lvor[i])
-            eID = self.graph.add_line(self.lvor[i][0], self.lvor[i][1], [0,1,0])
+            eID = self.graph.add_line(self.lvor[i][0], self.lvor[i][1], [0,1,0], 'purple')
             self.lvor[i][6] = eID
         # for vor in self.rvor:
         #     print(vor)
         for i in range(len(self.rvor)):
             # draw
             # print(self.rvor[i])
-            eID = self.graph.add_line(self.rvor[i][0], self.rvor[i][1], [0,1,0])
+            eID = self.graph.add_line(self.rvor[i][0], self.rvor[i][1], [0,1,0], 'green')
             self.rvor[i][6] = eID
         print("--------------end--------------------")
         self.uiapp.stop()
@@ -895,7 +895,7 @@ class voronoi():
         skipID = -1
         oldtouchLine = []
         last_intersection = []
-        while(not end_flag): # TODO when end_Flag is true, operate the last intersection of hyperplane
+        while(not end_flag):
             intersections_flag = False
             intersections = []
             touchLine = []
@@ -943,7 +943,7 @@ class voronoi():
                 newHpedges.append(drawEdge)
 
                 print('-------------------end_flag-------------------')
-                self.uiapp.stop()
+                # self.uiapp.stop()
                 break
             # 先處理前一個hyperplane  # TYPE -> hpedge = [low_drawEdge[0], Up_drawEdge[1], footl[0], footr[1], low_drawEdge[4], Up_drawEdge[5], eID]
             self.graph.clear_lineID(hpedge[6])
@@ -987,12 +987,12 @@ class voronoi():
             print('-----------------------------')
             print('slope, b', slope, b)
             print(intersection)
-            self.uiapp.stop()
+            # self.uiapp.stop()
             
             point = self.graph.lineOtherPoint(intersection, slope, b, 'y')
             print('intersection', intersection)
             print('point', point)
-            self.uiapp.stop()
+            # self.uiapp.stop()
             if slope == 0:
                 point[0] = intersection[0]
                 point[1] = maxsize
@@ -1067,7 +1067,7 @@ class voronoi():
                     afterWipeLow = pl
                 oldID = touchLine[6]
                 afterWipeDrawLow, afterWipeDrawUp = self.graph.clip_line(afterWipeLow, afterWipeUp)
-                self.uiapp.stop()
+                # self.uiapp.stop()
                 eID = self.graph.add_line(afterWipeDrawLow, afterWipeDrawUp, [0,1,0], "blue")
                 skipID = eID
                 NewTouchLine = [afterWipeDrawLow, afterWipeDrawUp, touchLine[2], touchLine[3], afterWipeLow, afterWipeUp, eID]
@@ -1102,7 +1102,7 @@ class voronoi():
         print('allVertex')
         for vertex in allVertex:
             print(vertex)
-        self.uiapp.stop()
+        # self.uiapp.stop()
         for i in range(len(self.vor)):
             connect = 0
             for j in range(len(allVertex)):
@@ -1112,7 +1112,7 @@ class voronoi():
                     connect += 1
             if (connect <= 2):
                 orphanID.append(self.vor[i][6])
-        self.uiapp.stop()
+        # self.uiapp.stop()
 
         if test and test_index <= 2:
             print('vorvorvorvorvorvorvorvorvorvorvorvorvorvorvorvorvorvorvorvor')
@@ -1144,23 +1144,24 @@ class voronoi():
             eID = self.canvas.create_line(newHpedges[i][0][0], newHpedges[i][0][1], newHpedges[i][1][0], newHpedges[i][1][1], fill="red", tags="line")
             newHpedges[i][6] = eID
             self.graph.edges.append(newHpedges[i])
-        self.uiapp.stop()
+        # self.uiapp.stop()
         for edge in newHpedges:
             self.vor.append(edge)
         # print('self.vor', len(self.vor))
         # print(self.vor)
-        self.uiapp.stop()
+        # self.uiapp.stop()
         print('self.hpedges', len(self.hpedges))
         print(self.hpedges)
-        self.uiapp.stop()
+        # self.uiapp.stop()
         self.hpedges.clear()
 
-        for edge in self.vor:
-            print('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
-            print(edge)
-            self.uiapp.stop()
-        print('kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
-        self.uiapp.stop()
+        if test and test_index <= 3:
+            for edge in self.vor:
+                print('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+                print(edge)
+                self.uiapp.stop()
+            print('kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
+        # self.uiapp.stop()
 
 
 
@@ -1498,7 +1499,7 @@ class UiApp:
                 self.master.after(10)
 
 # main---------------------------------------------------------------------------------------------------------------
-test = True
+test = False
 test_index = 3
 
 if __name__ == "__main__":
