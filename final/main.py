@@ -978,7 +978,7 @@ class voronoi():
                     newFoot.append(newFootCandidate[0])
             print('oldFoot', footl, footr)
             print('newFoot', newFoot)
-            footl, footr = newFoot[0], newFoot[1]
+            footl, footr = newFoot[0], newFoot[1] # TODO BUG here with bug0.txt
             if test and test_index <= 3:
                 self.graph.add_line(footl, footr, [0, 1, 0], 'black')
             # self.uiapp.stop()
