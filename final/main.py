@@ -123,8 +123,8 @@ class Graph():
     # return edge id
     def add_line(self, point1, point2, edge_status, color='blue'): # edge_status = [left, mid, right] -> left=1 : <-1 2, mid=1 : 1-2, right=1 : 1 2-> ; excaption [0,0,0] means perpendicular line 
         dx1, dy1, dx2, dy2 = self.calculate_line_endpoints(point1, point2, edge_status)
-        canvasP = self.clip_line((dx1, dy1), (dx2, dy2))
-        if (canvasP == None):
+        canvasP, oncanvas = self.clip_line((dx1, dy1), (dx2, dy2))
+        if (oncanvas == False):
             return None
         canvas_x1, canvas_y1 = canvasP[0]
         canvas_x2, canvas_y2 = canvasP[1]
@@ -134,7 +134,7 @@ class Graph():
         self.edges.append([canvasP[0], canvasP[1], point1, point2, [dx1, dy1], [dx2, dy2], eID]) # TODO maybe only store output is okey
         return eID
 
-    # 裁切線段回傳畫布上兩端點 -> return [[x1, y1], [x2, y2]]
+    # 裁切線段回傳畫布上兩端點 -> return [[x1, y1], [x2, y2], TorF]
     def clip_line(self, point1, point2):
 
         line_a, line_b = self.find_line(point1, point2)
@@ -142,10 +142,6 @@ class Graph():
         x2, y2 = point2
         canvas_x1, canvas_y1 = point1
         canvas_x2, canvas_y2 = point2
-        # 如果整條線段都在畫布外，則不畫
-        if ((x1<0 or x1>self.width) and (x2<0 or x2>self.width) and (y1<0 or y1>self.length) and (y2<0 or y2>self.length)):
-            return [[0, 0], [0, 0]]
-
         if line_a is None:  # 處理垂直線的邊界
             if y1 < 0:
                 canvas_y1 = 0
@@ -215,8 +211,12 @@ class Graph():
             if (tx2 >= 0 and tx2 <= self.length):
                 x2 = tx2
                 y2 = 0
-            
-        return ([[x1, y1], [x2, y2]])
+        
+        # 如果整條線段都在畫布外，則不畫
+        if ((x1<0 or x1>self.width) and (x2<0 or x2>self.width) and (y1<0 or y1>self.length) and (y2<0 or y2>self.length)):
+            return [[[x1, y1], [x2, y2]], False]
+
+        return [[[x1, y1], [x2, y2]], True]
 
     # add a point to the graph
     def add_point(self, point, color='red', checkindex = -1):
@@ -317,9 +317,10 @@ class Graph():
             canvas_x2 = self.length
             canvas_y2 = perp_slope * canvas_x2 + b
             
-        canvasP = self.clip_line((canvas_x1, canvas_y1), (canvas_x2, canvas_y2))
-        if (canvasP == None):
-            return None
+        canvasP, oncanvas = self.clip_line((canvas_x1, canvas_y1), (canvas_x2, canvas_y2))
+        if (oncanvas == False):
+            canvasP[0] = [0,0]
+            canvasP[1] = [0,0]
         canvas_x1, canvas_y1 = canvasP[0]
         canvas_x2, canvas_y2 = canvasP[1]
 
@@ -600,7 +601,6 @@ class voronoi():
         self.chr = []
         self.ch  = []
         self.hpedges = []
-        self.vedges = []
         # store voronoi diagram
         self.lvor = []
         self.rvor = []
@@ -612,12 +612,20 @@ class voronoi():
         self.chr.clear()
         self.ch.clear()
         self.hpedges.clear()
-        self.vedges.clear()
         self.lvor.clear()
         self.rvor.clear()
         self.vor.clear()
 
     def compute_voronoi(self):
+        
+        points = []
+        chl = []
+        chr = []
+        ch  = []
+        hpedges = []
+        lvor = []
+        rvor = []
+        vor = []
         if (len(self.graph.points) <=1):
             return self.graph.points, []
         elif (len(self.graph.points) == 2):
@@ -635,9 +643,10 @@ class voronoi():
                 self.graph.edges.append(edge)
             return ch ,drawEdges
         else:
-            self.voronoi_start(self.graph.points, self.graph.points_id)
+            self.voronoi_start(self.graph.points, [])
 
-    def voronoi_start(self, points, points_id):
+    def voronoi_start(self, points, vor):
+        lvor, rvor, chl, chr, ch = [], [], [], [], []
         if (len(points) <=1):
             return points, [] # return v_points, v_edges
         elif (len(points) == 2):
@@ -651,46 +660,40 @@ class voronoi():
             ch ,drawEdges = self.compute_voronoi_three(points)
             return ch ,drawEdges
         else:
-            left, left_id, right, right_id = self.divide(points, points_id)
+            left, right = self.divide(points)
             # draw left convex hull
             self.uiapp.stop()
-            lpoints, lvor = self.voronoi_start( left,  left_id) # left
+            lpoints, lvor = self.voronoi_start( left,  vor) # left
             for Bpoint in lpoints:
                 self.canvas.create_oval(Bpoint[0] - 3, Bpoint[1] - 3, Bpoint[0] + 3, Bpoint[1] + 3, fill='blue')
-            self.lvor = (lvor)
 
             # draw right convex hull
             self.uiapp.stop()
-            rpoints, rvor = self.voronoi_start(right, right_id) # right
-            self.rvor = (rvor)
+            rpoints, rvor = self.voronoi_start(right, vor) # right
+
             for Bpoint in rpoints:
                 self.canvas.create_oval(Bpoint[0] - 3, Bpoint[1] - 3, Bpoint[0] + 3, Bpoint[1] + 3, fill='blue')
 
             # merge
+            print("lvor, rvor", len(lvor), len(rvor))
             self.uiapp.stop()
-            # mpoints, mvor = 
-            self.merge(left, right) # merge(left, right) # TODO doing
-            return left+right, self.vor
+            vor = self.merge(left, right, lvor, rvor, lvor+rvor) # merge(left, right) # TODO ondo
+            return left+right, vor
     
-    # devide points into left and right -> return [left, left_id, right, right_id]
-    def divide(self, points, points_id):
-        # 根據x進行排序 並分成左右兩邊 sort points and points_id together
+    # devide points into left and right -> return [left, right]
+    def divide(self, points):
+        # 根據x進行排序 並分成左右兩邊 sort points
         for i in range(len(points)):
             for j in range(i+1, len(points)):
                 if (points[i][0] > points[j][0]):
                     points[i], points[j] = points[j], points[i]
-                    points_id[i], points_id[j] = points_id[j], points_id[i]
         mid = len(points) // 2
         left, right = points[:mid], points[mid:]
-        left_id, right_id = points_id[:mid], points_id[mid:]
-        # if test==True and test_index <= 1:
-        #     print("-----devide-----")
-        #     print(left, right)
-        #     print("-----devideEnd-----")
-        return left, left_id, right, right_id
+        return left, right
 
-    def merge(self, left, right):
+    def merge(self, left, right, lvor, rvor, vor):
         # merge hull and find lower and upper tangent
+        ch = []
         chl = self.convex_hull(left)
         chr = self.convex_hull(right)
         merge_ch, lower, upper = self.merge_hull(chl, chr)
@@ -701,39 +704,33 @@ class voronoi():
         for i in range(len(merge_ch)):
             # if (lower)
             if (i != len(merge_ch)-1):
-                self.ch.append(self.graph.add_line(merge_ch[i], merge_ch[i+1], [0, 1, 0], 'gray'))
+                ch.append(self.graph.add_line(merge_ch[i], merge_ch[i+1], [0, 1, 0], 'gray'))
             else:
-                self.ch.append(self.graph.add_line(merge_ch[0], merge_ch[i], [0, 1, 0], 'gray'))
+                ch.append(self.graph.add_line(merge_ch[0], merge_ch[i], [0, 1, 0], 'gray'))
         # draw voronoi left and right
         print("---------------vorstart-------------")
-        print('self.lvor', len(self.lvor))
-        # for vor in self.lvor:
+        print('lvor', len(lvor))
+        # for vor in lvor:
         #     print(vor)
-        for i in range(len(self.lvor)):
+        for i in range(len(lvor)):
             # draw
-            # print(self.lvor[i])
-            eID = self.graph.add_line(self.lvor[i][0], self.lvor[i][1], [0,1,0], 'purple')
-            self.lvor[i][6] = eID
-        # for vor in self.rvor:
-        #     print(vor)
-        for i in range(len(self.rvor)):
+            # print(lvor[i])
+            eID = self.graph.add_line(lvor[i][0], lvor[i][1], [0,1,0], 'purple')
+            lvor[i][6] = eID
+        print('rvor', len(rvor))
+        for i in range(len(rvor)):
             # draw
-            # print(self.rvor[i])
-            eID = self.graph.add_line(self.rvor[i][0], self.rvor[i][1], [0,1,0], 'green')
-            self.rvor[i][6] = eID
+            # print(rvor[i])
+            eID = self.graph.add_line(rvor[i][0], rvor[i][1], [0,1,0], 'green')
+            rvor[i][6] = eID
         print("--------------end--------------------")
         self.uiapp.stop()
         # delete convex hull
-        for id in self.ch:
+        for id in ch:
             self.graph.clear_lineID(id)
-        self.ch.clear()
 
-
-        self.vor = self.lvor + self.rvor
-        self.hyper_plane(lower, upper)
-        # voronoi
-        # self.merge()
-        # self.convex_hull(left + right)
+        vor = lvor + rvor
+        return self.hyper_plane(lower, upper, vor) # return new voronoi
 
     # return ch <- points
     def convex_hull(self, points): # use graham's scan
@@ -863,17 +860,16 @@ class voronoi():
         if ((lower_tangent[0][1] >= upper_tangent[0][1] and lower_tangent[1][1] >= upper_tangent[1][1]) or (lower_tangent[0][0] <= upper_tangent[0][0] and lower_tangent[1][0] <= upper_tangent[1][0])):
             lower_tangent, upper_tangent = upper_tangent, lower_tangent
 
-        # self.graph.add_line(lower_tangent[0], lower_tangent[1], [0, 1, 0], 'red')
-        # self.graph.add_line(upper_tangent[0], upper_tangent[1], [0, 1, 0], 'red')
-        
-        # print(merged_hull)
         return self.convex_hull(chl+chr), lower_tangent, upper_tangent
     
-    def hyper_plane(self, lower, upper):
+    def hyper_plane(self, lower, upper, vor):
+        print('vor:', len(vor))
+        self.uiapp.stop()
+        hpedges = []
         # draw lower and upper tangent
-        if test and test_index <= 2:
-            # self.graph.add_line(lower[0], lower[1], [0, 1, 0], 'red')
-            self.graph.add_line(lower[0], lower[1], [0, 1, 0], 'green')
+        if test and test_index <= 3:
+            self.graph.add_line(lower[0], lower[1], [0, 1, 0], 'red')
+            self.graph.add_line(upper[0], upper[1], [0, 1, 0], 'green')
         # use the perpendicular line to find the hyperplane -> use lower
         drawEdge = self.graph.add_perpendicular_line(lower[0], lower[1])
         eID = self.canvas.create_line(drawEdge[0][0], drawEdge[0][1], drawEdge[1][0], drawEdge[1][1], fill="green", tags="line")
@@ -891,7 +887,7 @@ class voronoi():
         # 最多交集len(vor)條線段
         end_flag = False
         if test and test_index <= 2:
-            print('vor:', len(self.vor))
+            print('vor:', len(vor))
         skipID = -1
         oldtouchLine = []
         last_intersection = []
@@ -899,19 +895,23 @@ class voronoi():
             intersections_flag = False
             intersections = []
             touchLine = []
-            for j in range(len(self.vor)):
+            for j in range(len(vor)):
                 if (test and test_index <= 2):
-                    self.graph.add_line(self.vor[j][0], self.vor[j][1], [0, 1, 0], 'orange')
+                    self.graph.add_line(vor[j][0], vor[j][1], [0, 1, 0], 'orange')
                     self.uiapp.stop()
                 # use intersectionTwoLineparts to find intersection point
                 intersection_flag = False
-                intersection_flag, intersection = self.graph.intersectionTwoLineparts( [hpedge[4], hpedge[5]], [self.vor[j][4], self.vor[j][5]]) # 計算兩線段是否有交點 -> return [T or F, [x, y]]
+                if test and test_index <= 3:
+                    print('906')
+                intersection_flag, intersection = self.graph.intersectionTwoLineparts( [hpedge[4], hpedge[5]], [vor[j][4], vor[j][5]]) # 計算兩線段是否有交點 -> return [T or F, [x, y]]
+                if test and test_index <= 3:
+                    print('909')
                 if (intersection_flag):
                     intersections_flag = True
                     if (test and test_index <= 2):
                         self.canvas.create_oval(intersection[0] - 3, intersection[1] - 3, intersection[0] + 3, intersection[1] + 3, fill='blue')
                         # self.uiapp.stop()
-                    intersections.append([intersection, self.vor[j]])
+                    intersections.append([intersection, vor[j]])
             # 如果有找到交點，則找出最近的交點，由lower往upper找
             if (intersections_flag):
                 # sort intersection by y
@@ -924,9 +924,13 @@ class voronoi():
                         intersection = intersections[1][0]
                         touchLine = intersections[1][1]
                 # intersection = intersections[0]
-                if test and test_index <= 2: # TODO not operate out of boundary
-                    self.canvas.create_oval(intersection[0] - 3, intersection[1] - 3, intersection[0] + 3, intersection[1] + 3, fill='yellow')
-                    # self.uiapp.stop()
+                if test and test_index <= 3: # TODO not operate out of boundary
+                    print('find intersection')
+                    id = self.canvas.create_oval(intersection[0] - 5, intersection[1] - 5, intersection[0] + 5, intersection[1] + 5, fill='orange')
+                    self.uiapp.stop()
+                    self.canvas.delete(id)
+                    self.uiapp.stop()
+
             else:
                 # the last hyperplane
                 end_flag = True
@@ -946,31 +950,57 @@ class voronoi():
                 # self.uiapp.stop()
                 break
             # 先處理前一個hyperplane  # TYPE -> hpedge = [low_drawEdge[0], Up_drawEdge[1], footl[0], footr[1], low_drawEdge[4], Up_drawEdge[5], eID]
-            self.graph.clear_lineID(hpedge[6])
+            if (hpedge[6]!= None):
+                self.graph.clear_lineID(hpedge[6])
             self.uiapp.stop()
-
             hpUp = intersection
-            drawLow, drawUp = self.graph.clip_line(hpLow, hpUp)
-
-            # print('drawLow, drawUp, hpLow, hpUp')
-            # print(drawLow, drawUp, hpLow, hpUp)
-            # self.uiapp.stop()
+            draw, oncavas = self.graph.clip_line(hpLow, hpUp)
+            drawLow, drawUp = draw[0], draw[1]
+            if (oncavas == False):
+                drawLow, drawUp = [0, 0], [0, 0]
+            if test:
+                print('line 947')
+                print('intersection', intersection)
+                print('drawLow, drawUp', drawLow, drawUp)
+                self.uiapp.stop()
+            
             # clip, store and draw hyperplane TODO add line after
             eID = self.graph.add_line(drawLow, drawUp, [0,1,0], "orange")
             Cal_HpEdge = [drawLow, drawUp, hpedge[2], hpedge[3], hpLow, hpUp, eID]
             newHpedges.append(Cal_HpEdge)
-            # self.uiapp.stop()
+            print('newHpedges', newHpedges)
+            self.uiapp.stop()
 
             # define new footl and footr
             newFoot = []
             newFootCandidate = [touchLine[2], touchLine[3]]
-            if ((newFootCandidate[0] == footl) or (newFootCandidate[1] == footl)):
+            print('977 newFootCandidate', newFootCandidate)
+            if test and test_index <= 3:
+                # draw new and old foot
+                print('980 touchline', touchLine)
+                self.uiapp.stop()
+                id3 = self.canvas.create_oval(touchLine[2][0] - 10, touchLine[2][1] - 10, touchLine[2][0] + 10, touchLine[2][1] + 10, fill='yellow')
+                id4 = self.canvas.create_oval(touchLine[3][0] - 10, touchLine[3][1] - 10, touchLine[3][0] + 10, touchLine[3][1] + 10, fill='yellow')
+                id1 = self.canvas.create_oval(footl[0] - 5, footl[1] - 5, footl[0] + 5, footl[1] + 5, fill='green')
+                id2 = self.canvas.create_oval(footr[0] - 5, footr[1] - 5, footr[0] + 5, footr[1] + 5, fill='green')
+                self.uiapp.stop()
+                self.canvas.delete(id1)
+                self.canvas.delete(id2)
+                self.canvas.delete(id3)
+                self.canvas.delete(id4)
+                self.uiapp.stop()
+            self.uiapp.stop()
+
+
+            if ((newFootCandidate[0][0] == footl[0] and newFootCandidate[0][1] == footl[1]) or 
+                (newFootCandidate[1][0] == footl[0] and newFootCandidate[1][1] == footl[1])):
                 newFoot.append(footr)
                 if (newFootCandidate[0] == footl):
                     newFoot.append(newFootCandidate[1])
                 else:
                     newFoot.append(newFootCandidate[0])
-            elif ((newFootCandidate[0] == footr) or (newFootCandidate[1] == footr)):
+            elif ((newFootCandidate[0][0] == footr[0] and newFootCandidate[1][0] == footr[0]) or
+                  (newFootCandidate[1][0] == footr[0] and newFootCandidate[1][1] == footr[1])):
                 newFoot.append(footl)
                 if (newFootCandidate[0] == footr):
                     newFoot.append(newFootCandidate[1])
@@ -1009,7 +1039,10 @@ class voronoi():
             print('newpoint', newpoint)
             # self.uiapp.stop()
             hpLow, hpUp = newpoint[0], newpoint[1]
-            drawLow, drawUp = self.graph.clip_line(hpLow, hpUp)
+            draw, oncanvas = self.graph.clip_line(hpLow, hpUp)
+            drawLow, drawUp = draw[0], draw[1]
+            if (oncanvas == False):
+                drawLow, drawUp = [0, 0], [0, 0]
             hpedge = [drawLow, drawUp, footl, footr, newpoint[0], newpoint[1], eID]
             # newHpedges.append(hpedge)
 
@@ -1066,7 +1099,11 @@ class voronoi():
                 else:
                     afterWipeLow = pl
                 oldID = touchLine[6]
-                afterWipeDrawLow, afterWipeDrawUp = self.graph.clip_line(afterWipeLow, afterWipeUp)
+                afterWipe, oncanvas = self.graph.clip_line(afterWipeLow, afterWipeUp)
+                afterWipeDrawLow, afterWipeDrawUp = afterWipe
+                if (oncanvas == False):
+                    afterWipeLow = [0, 0]
+                    afterWipeUp = [0, 0]
                 # self.uiapp.stop()
                 eID = self.graph.add_line(afterWipeDrawLow, afterWipeDrawUp, [0,1,0], "blue")
                 skipID = eID
@@ -1074,15 +1111,15 @@ class voronoi():
                 self.canvas.create_line(afterWipeDrawLow[0], afterWipeDrawLow[1], afterWipeDrawUp[0], afterWipeDrawUp[1], fill="blue", tags="line")
                 print('--------------------------------------------------------------')
                 print('oldID', oldID)
-                for i in range(len(self.vor)):
-                    print(self.vor[i])
-                    if self.vor[i][6] == oldID:
-                        self.vor[i] = NewTouchLine
+                for i in range(len(vor)):
+                    print(vor[i])
+                    if vor[i][6] == oldID:
+                        vor[i] = NewTouchLine
                 print('--------------------------------------------------------------')
-                for edge in self.vor:
+                for edge in vor:
                     print(edge)
                 print('--------------------------------------------------------------')
-                print(self.vor)
+                print(vor)
                 self.uiapp.stop()
                 last_intersection = intersection
                 oldtouchLine = touchLine
@@ -1091,9 +1128,9 @@ class voronoi():
         
         # 遍歷所有voronoi線段，找出Orphan Edge並刪除，orphan edge: 兩端點皆沒有和voronoi的兩端點相同相交
         allVertex = []
-        for i in range(len(self.vor)):
-            allVertex.append(self.vor[i][4])
-            allVertex.append(self.vor[i][5])
+        for i in range(len(vor)):
+            allVertex.append(vor[i][4])
+            allVertex.append(vor[i][5])
         for i in range(len(newHpedges)):
             allVertex.append(newHpedges[i][4])
             allVertex.append(newHpedges[i][5])
@@ -1103,42 +1140,42 @@ class voronoi():
         for vertex in allVertex:
             print(vertex)
         # self.uiapp.stop()
-        for i in range(len(self.vor)):
+        for i in range(len(vor)):
             connect = 0
             for j in range(len(allVertex)):
-                if ((round(self.vor[i][4][0], 4) == round(allVertex[j][0], 4)) and (round(self.vor[i][4][1], 4) == round(allVertex[j][1], 4))):
+                if ((round(vor[i][4][0], 4) == round(allVertex[j][0], 4)) and (round(vor[i][4][1], 4) == round(allVertex[j][1], 4))):
                     connect += 1
-                if ((round(self.vor[i][5][0], 4) == round(allVertex[j][0], 4)) and (round(self.vor[i][5][1], 4) == round(allVertex[j][1], 4))):
+                if ((round(vor[i][5][0], 4) == round(allVertex[j][0], 4)) and (round(vor[i][5][1], 4) == round(allVertex[j][1], 4))):
                     connect += 1
             if (connect <= 2):
-                orphanID.append(self.vor[i][6])
+                orphanID.append(vor[i][6])
         # self.uiapp.stop()
 
         if test and test_index <= 2:
             print('vorvorvorvorvorvorvorvorvorvorvorvorvorvorvorvorvorvorvorvor')
-            for i in range(len(self.vor)):
-                print(self.vor[i])
+            for i in range(len(vor)):
+                print(vor[i])
             self.uiapp.stop()
             print('vorvorvorvorvorvorvorvorvorvorvorvorvorvorvorvorvorvorvorvor')
 
         for id in orphanID:
-            for j in range(len(self.vor)):
-                print('self.vor[j]', self.vor[j])
+            for j in range(len(vor)):
+                print('vor[j]', vor[j])
                 self.uiapp.stop()
-                if (self.vor[j][6] == id):
-                    self.vor.pop(j)
+                if (vor[j][6] == id):
+                    vor.pop(j)
                     self.graph.clear_lineID(id)
                     break
 
 
-        self.hpedges.append(newHpedges)
+        hpedges.append(newHpedges)
         print('out of looop 936')
         self.graph.clear_lines()
-        for i in range(len(self.vor)):
-            self.graph.clear_lineID(self.vor[i][6])
-            eID = self.canvas.create_line(self.vor[i][0][0], self.vor[i][0][1], self.vor[i][1][0], self.vor[i][1][1], fill="green", tags="line")
-            self.vor[i][6] = eID
-            self.graph.edges.append(self.vor[i])
+        for i in range(len(vor)):
+            self.graph.clear_lineID(vor[i][6])
+            eID = self.canvas.create_line(vor[i][0][0], vor[i][0][1], vor[i][1][0], vor[i][1][1], fill="green", tags="line")
+            vor[i][6] = eID
+            self.graph.edges.append(vor[i])
         for i in range(len(newHpedges)):
             self.graph.clear_lineID(newHpedges[i][6])
             eID = self.canvas.create_line(newHpedges[i][0][0], newHpedges[i][0][1], newHpedges[i][1][0], newHpedges[i][1][1], fill="red", tags="line")
@@ -1146,22 +1183,24 @@ class voronoi():
             self.graph.edges.append(newHpedges[i])
         # self.uiapp.stop()
         for edge in newHpedges:
-            self.vor.append(edge)
-        # print('self.vor', len(self.vor))
-        # print(self.vor)
+            vor.append(edge)
+        # print('vor', len(vor))
+        # print(vor)
         # self.uiapp.stop()
-        print('self.hpedges', len(self.hpedges))
-        print(self.hpedges)
+        print('hpedges', len(hpedges))
+        print(hpedges)
         # self.uiapp.stop()
-        self.hpedges.clear()
+        hpedges.clear()
 
         if test and test_index <= 3:
-            for edge in self.vor:
+            for edge in vor:
                 print('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
                 print(edge)
                 self.uiapp.stop()
             print('kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
         # self.uiapp.stop()
+        print('1183 hpEND', len(vor))
+        return vor
 
 
 
@@ -1246,7 +1285,10 @@ class voronoi():
                 Point2 = [dx2, dy2]
                 # [draw1, draw2, point_a, point_b, edge_piont1, edge_point2, id]
                 # clip edge
-                draw1, draw2 = self.graph.clip_line(Point1, Point2)
+                draw, oncanvas = self.graph.clip_line(Point1, Point2)
+                draw1, draw2 = draw
+                if (oncanvas == False):
+                    draw1, draw2 = [0, 0], [0, 0]
                 eID = self.graph.add_line(draw1, draw2, [0, 1, 0])
                 if eID==None:
                     print('error')
@@ -1499,8 +1541,8 @@ class UiApp:
                 self.master.after(10)
 
 # main---------------------------------------------------------------------------------------------------------------
-test = False
-test_index = 3
+test = True
+test_index = 4
 
 if __name__ == "__main__":
     # 設定長寬
