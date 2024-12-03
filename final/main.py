@@ -234,8 +234,8 @@ class Graph():
         # add the point in the canvas
         point_id = self.canvas.create_oval(point[0] - 3, point[1] - 3, point[0] + 3, point[1] + 3, fill=color)
         self.points.append((point[0], point[1]))
-        if (test):
-            print(f"add point: {point}: {point_id}")
+        # if (test):
+        print(f"add point: {point}: {point_id}")
         self.points_id.append(point_id)
 
     # clear all points and lines
@@ -622,7 +622,8 @@ class voronoi():
             return self.graph.points, []
         elif (len(self.graph.points) == 2):
             drawEdge = self.graph.add_perpendicular_line(self.graph.points[0], self.graph.points[1])
-            eID = self.canvas.create_line(drawEdge[0][0], drawEdge[0][1], drawEdge[1][0], drawEdge[1][1], fill="blue", tags="line")
+            eid = self.graph.add_line(drawEdge[0], drawEdge[1], [0, 1, 0])
+            # eID = self.canvas.create_line(drawEdge[0][0], drawEdge[0][1], drawEdge[1][0], drawEdge[1][1], fill="blue", tags="line")
             drawEdge.append(eID)
             self.graph.edges.append(drawEdge)
             return self.graph.points, drawEdge
@@ -632,7 +633,6 @@ class voronoi():
                 print(edge)
                 eID = self.graph.add_line(edge[0], edge[1], [0, 1, 0])
                 edge[6] = eID
-                self.graph.edges.append(edge)
             return ch ,drawEdges
         else:
             self.voronoi_start(self.graph.points, self.graph.points_id)
@@ -1367,9 +1367,18 @@ class UiApp:
                     tmpPoints[i], tmpPoints[j] = tmpPoints[j], tmpPoints[i]
                 elif (tmpPoints[i][0] == tmpPoints[ j][0] and tmpPoints[i][1] > tmpPoints[j][1]):
                     tmpPoints[i], tmpPoints[j] = tmpPoints[j], tmpPoints[i]
-        tmpEdges = []
 
+        tmpEdges = []
+        # delete the edge in self.graph.edges with edge[0] == edge[1] 
+        cleanEdges = []
         for edge in self.graph.edges:
+            if (edge[0] != edge[1]):
+                # check cleanEdges and clip line again
+                clipedge = self.graph.clip_line(edge[0], edge[1])
+                cleanEdges.append(clipedge)
+        
+        
+        for edge in cleanEdges:
             tmpEdges.append([edge[0][0], edge[0][1], edge[1][0], edge[1][1]])
 
         for i in tmpEdges:
