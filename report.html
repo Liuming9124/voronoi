@@ -93,33 +93,17 @@
                 </li>
                 <li>範例輸出檔案內容：
                     <div class="card" style="width: 18rem;">
-                        <div class="col px-3">
-                            P 103 200
-                        </div>
-                        <div class="col px-3">
-                            P 193 64
-                        </div>
-                        <div class="col px-3">
-                            P 193 370
-                        </div>
-                        <div class="col px-3">
-                            P 283 200
-                        </div>
-                        <div class="col px-3">
-                            E 0 34 193 161
-                        </div>
-                        <div class="col px-3">
-                            E 0 363 193 261
-                        </div>
-                        <div class="col px-3">
-                            E 193 161 193 261
-                        </div>
-                        <div class="col px-3">
-                            E 193 161 437 0
-                        </div>
-                        <div class="col px-3">
+                        <p class="px-3">
+                            P 103 200 <br>
+                            P 193 64 <br>
+                            P 193 370 <br>
+                            P 283 200 <br>
+                            E 0 34 193 161 <br>
+                            E 0 363 193 261 <br>
+                            E 193 161 193 261 <br>
+                            E 193 161 437 0 <br>
                             E 193 261 600 476
-                        </div>
+                        </p>
                     </div>
                 </li>
             </ul>
@@ -257,16 +241,219 @@
 
 
             <p class="fs-4">演算法</p>
-                <p>三點以下: 暴力解</p>
-                    <li>一個點</li>
-                        <p>一個點不存在Voronoi線段，因此回傳Voronoi空集合。</p>
-                    <li>兩個點</li>
-                        <p>兩個點的Voronoi線段為兩點的中垂線。</p>
-                    <li>三個點</li>
-                        <p></p>
+                <div class="px-2">
+                    
+                    <p class="fs-5 fw-bold">三點以下: 暴力解</p>
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <strong>一個點</strong>
+                                <p class="ms-4 mb-0">一個點不存在 Voronoi 線段，因此回傳 Voronoi 空集合。</p>
+                            </li>
+                            <li class="list-group-item">
+                                
+                                <div class="row">
 
-                <p>四點以上: Devide and conquer</p>
-            
+                                    <div class="col">
+                                        <strong>兩個點</strong>
+                                        <p class="ms-4 mb-0">兩個點的 Voronoi 線段為兩點的中垂線。</p>
+                                    </div>
+
+                                    <div class="col d-flex justify-content-center">
+                                        <img src="./static/imgs/vor2points.png" alt="acute_triangle" width="300px">
+                                    </div>
+
+                                </div>
+                            </li>
+                            <li class="list-group-item">
+                                <div class="row">
+
+                                    <div class="col">
+                                        <strong>三個點</strong>
+                                        <p class="ms-4 mb-0">
+                                            <ol>
+                                                <li>判斷三角形的類型，若為三點共線須進行例外處理(回傳兩條Voronoi線段: 由三點中的中間頂點與另外兩點的中垂腺)</li>
+                                                <li>找出三角形的外心，外心為三點的垂直平分線的交點</li>
+                                                <li><b>銳角三角形</b>：由外心向三頂點的射線為 Voronoi 線段</li>
+                                                <li><b>鈍角三角形</b>：與 3-1 不同之處在於其中一條 Voronoi 線段會由外心遠離兩個銳角頂點，形成與鈍角頂點相對的線段</li>
+                                            </ol>
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div class="col d-flex m-3 justify-content-center">
+                                    <div class="row">
+                                        <div class="col">
+                                            <img src="./static/imgs/vor3pointsonline.png" alt="acute_triangle" width="350px">
+                                        </div>
+                                        <div class="col">
+                                            <img src="./static/imgs/vor3pointsnormal.png" alt="acute_triangle" width="350px">
+                                        </div>
+                                        <div class="col">
+                                            <img src="./static/imgs/vor3points.png" alt="acute_triangle" width="350px">
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </li>
+                        </ul>
+                        <br><br>
+                    
+
+                    <p class="fs-5 fw-bold">四點以上: Devide and conquer</p>
+
+                        <div class="container mt-4">
+                        
+                            <!-- Divide Section -->
+                            <div class="mt-4">
+                                <p class="fs-5 mb-3">分割 (Divide)</p>
+                                <div class="list-group">
+                                    <div class="list-group-item">
+                                        <p class="fs-5 fw-bold">步驟</p>
+                                        <p class="ms-4 mb-0">將所有點依據 <strong>x 座標排序</strong>，並將點分為左右兩個子集合並回傳。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <!-- Merge Section -->
+                            <div class="mt-4">
+                                <p class="fs-5 mb-3">合併 (Merge)</p>
+                                <ol class="list-group list-group-numbered">
+                                    <li class="list-group-item">
+                                        <p class="fs-5 fw-bold">Convex Hull</p>
+                                        <p>
+                                            使用 <strong>Graham's Scan</strong> 演算法計算凸包。具體步驟如下：
+                                        </p>
+                                        <ol class="ms-2">
+                                            <li>找到最左下的點作為基準點。</li>
+                                            <li>將其他點按相對基準點的極角進行排序，若角度相同則按距離排序。</li>
+                                            <li>依次遍歷排序後的點，使用 <strong>叉積 (Cross Product)</strong> 判斷點是否形成逆時針方向的凸包邊界。</li>
+                                            <li>如果形成順時針方向，移除最後加入的點，確保邊界是凸的。</li>
+                                        </ol>
+                                        <p>最終結果為一個封閉的凸包，包含所有點。</p>
+                                    </li>
+                        
+                                    
+                                    <li class="list-group-item">
+                                        <p class="fs-5 fw-bold">合併凸包</p>
+
+                                        <ul>
+                                            <li>將左右兩部分的頂點集合進行合併。</li>
+                                            <li>重新對合併後的點集進行凸包計算（使用 Graham's Scan）。</li>
+                                            <li>合併後的凸包包含所有輸入點的外部邊界。</li>
+                                        </ul>
+                                        <br>
+
+                                        <p>
+                                            此部分的時候我沒有依序由左Convex Hull最右點及右Convex Hull最左點順逆時針刪除造訪到的點，
+                                            而是直接將左右Convex Hull的點全部合併，並重新呼叫Convex Hull函數，找出新的Convex Hull，此部分可以再改善。
+                                        </p>
+                                    </li>
+
+
+                                    <li class="list-group-item">
+                                        <p class="fs-5 fw-bold">找出上下切線</p>
+                                        <p>
+                                            對合併後的左右凸包，找到其 <strong>上公切線</strong> 和 <strong>下公切線</strong>，具體步驟如下：
+                                        </p>
+                                        <ol class="ms-4">
+                                            <li>
+                                                <strong>下公切線</strong>：
+                                                <ul>
+                                                    <li>從左凸包的最右點和右凸包的最左點開始。</li>
+                                                    <li>固定右側點，調整左側點，使切線方向順時針旋轉。</li>
+                                                    <li>固定左側點，調整右側點，使切線方向逆時針旋轉。</li>
+                                                    <li>直到左右兩邊的點不再移動，即確定下公切線。</li>
+                                                </ul>
+                                            </li>
+                                            <li>
+                                                <strong>上公切線</strong>：
+                                                <ul>
+                                                    <li>從左凸包的最右點和右凸包的最左點開始。</li>
+                                                    <li>固定右側點，調整左側點，使切線方向逆時針旋轉。</li>
+                                                    <li>固定左側點，調整右側點，使切線方向順時針旋轉。</li>
+                                                    <li>直到左右兩邊的點不再移動，即確定上公切線。</li>
+                                                </ul>
+                                            </li>
+                                        </ol>
+                                        <p>
+                                            <strong>例外情況處理：</strong><br>
+                                            當兩個凸包的點共線時（即切線與一條邊完全重合）：
+                                        </p>
+                                        <ul>
+                                            <li>程式檢查三個點是否共線（切線的兩端點與第三點），並計算點與邊的相對位置。</li>
+                                            <li>如果三點共線，切線會選擇遠離另一側凸包的方向，避免重複或錯誤計算。</li>
+                                            <li>當切線完全共線且有多個候選點時，程式會選擇最靠外的點作為最終的切線端點。</li>
+                                        </ul>
+                                        <p>
+                                            這種處理方式保證了切線的正確性，避免因共線情況導致的邊界錯誤。
+                                        </p>
+                                    </li>
+
+
+                                    <li class="list-group-item">
+                                        <p class="fs-5 fw-bold">計算中間的垂直平分線（Hyperplane）</p>
+                                        <p>對下公切線與上公切線進行處理，找到其垂直平分線，這是左右兩部分 Voronoi Diagram 的分界線。</p>
+                                        <p>使用一條由下公切線開始，垂直向上的射線，逐步向上找到各條垂直平分線。</p>
+                                    </li>
+                        
+
+                                    <li class="list-group-item">
+                                        <p class="fs-5 fw-bold">處理相交點與線段</p>
+                                        <p>垂直平分線向上延伸時，可能與左右兩邊的 Voronoi 線段相交。</p>
+                                        <ul>
+                                            <li>對每個相交點進行處理。</li>
+                                            <li>刪除遠離垂直平分線的 Voronoi 線段。</li>
+                                            <li>將新的線段加入合併後的 Voronoi Diagram。</li>
+                                        </ul>
+                                    </li>
+                        
+
+                                    <li class="list-group-item">
+                                        <p class="fs-5 fw-bold">清理孤立線段</p>
+                                        <p>在合併過程中，可能出現孤立的 Voronoi 線段（例如，兩端都無法與其他線段相連的線段）。</p>
+                                        <p>將這些孤立線段刪除，保證合併後的 Voronoi Diagram 正確無誤。</p>
+                                    </li>
+                        
+
+                                    <li class="list-group-item">
+                                        <p class="fs-5 fw-bold">整合結果</p>
+                                        <p>最終的合併結果包括：</p>
+                                        <ul>
+                                            <li>左右兩部分的 Voronoi Diagram。</li>
+                                            <li>新計算出的垂直平分線。</li>
+                                        </ul>
+                                        <p>整合後形成完整的 Voronoi Diagram，覆蓋所有輸入的點。</p>
+                                    </li>
+                                </ol>
+                            </div>
+                        
+                            <!-- Visual Flow Section -->
+                            <p class="fs-5 mt-4">視覺化流程</p>
+                            <ul class="list-group">
+                                <li class="list-group-item">分割為左右兩部分，各自生成 Voronoi Diagram。</li>
+                                <li class="list-group-item">找到上下公切線，作為兩部分的初步連接。</li>
+                                <li class="list-group-item">逐步修剪與延伸，形成完整的合併結果。</li>
+                            </ul>
+                        
+                            <div class="row mt-3">
+                                <div class="col-md-4 text-center">
+                                    <img src="./static/imgs/voronoi-divide-step.png" alt="Step 1" class="img-fluid rounded">
+                                    <p class="mt-2">分割步驟</p>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <img src="./static/imgs/voronoi-merge-step.png" alt="Step 2" class="img-fluid rounded">
+                                    <p class="mt-2">合併步驟</p>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <img src="./static/imgs/voronoi-final-result.png" alt="Step 3" class="img-fluid rounded">
+                                    <p class="mt-2">完整結果</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+
+
+                </div>
 
             <hr>
         </div>
