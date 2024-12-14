@@ -11,70 +11,288 @@
         content="Voronoi diagram final report">
     </head>
     <header>
-        <div
-        class="row navbar navbar-expand-md navbar-light bg-white text-white fixed-top pt-3">
-        <div class="col ps-5">
-            <button class="navbar-toggler" type="button"
-                data-bs-toggle="collapse" data-bs-target="#navbar"
-                aria-controls="navbar" aria-expanded="false"
-                aria-label="Toggle navigation">
-                <span
-                    class="navbar-toggler-icon bg-primary bg-body-secondary "></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbar">
-                <ul class="navbar-nav ps-3">
-                    <li class="nav-item"><a class="nav-link" href="/">XXX</a>
-                    </li>
-                    <li class="nav-item"><a class="nav-link"
-                            href="/service">AAA</a></li>
-                    <li class="nav-item"><a class="nav-link"
-                            href="/news">BBB</a></li>
-                </ul>
+        <div class="row navbar navbar-expand-md navbar-light bg-white text-white fixed-top pt-3">
+            <div class="col d-flex justify-content-center">
+                <a class="navbar-brand">
+                    <h3 class="text-color-1">Voronoi Report</h3>
+                </a>
             </div>
+            <div class="col">
+                <button class="navbar-toggler" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#navbar"
+                    aria-controls="navbar" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    <span
+                        class="navbar-toggler-icon bg-primary bg-body-secondary "></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbar">
+                    <ul class="navbar-nav">
+                        <li class="nav-item"><a class="nav-link" href="#softwareRule">軟體規格書</a>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" href="#softwareIntro"
+                                href="/">軟體說明</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#codeDesign"
+                                href="/">程式設計</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#testResult"
+                                href="/">軟體測試及實驗結果</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#conclusion"
+                                href="/">結論與心得</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#appendix"
+                                href="/">附錄</a></li>
+                    </ul>
+                </div>
+            </div>
+            <!-- <div class="col d-flex justify-content-end pe-5">
+                <a class="btn btn-outline-color-5" href="/">M133040015</a>
+            </div> -->
         </div>
-        <div class="col d-flex justify-content-center">
-            <a class="navbar-brand" href="/">
-                <h3 class="text-color-1">Voronoi Report</h3>
-            </a>
-        </div>
-        <div class="col d-flex justify-content-end pe-5">
-            <a class="btn btn-outline-color-5" href="/">M133040015</a>
-        </div>
-    </div>
     <br>
     <br>
     <br>
     </header>
-    <body class="py-5">
-        <div class="container">
+    <body class="p-5 bg-color bg-light">
+
+
+        <div class="container px-5">
             <p>題目: Voronoi Diagram 實作報告</p>
             <p>系級: 資訊工程研究所113級</p>
             <p>姓名: 劉恭銘</p>
             <p>學號: M133040015</p>
             <hr>
         </div>
-        <div class="container">
-            <p>軟體規格書：包含「輸出與輸入（資料）規格」、「功能規格與介面規格」、「軟體測試規劃書」與其他有利於軟體開發之規格。</p>
+
+
+        <div class="container px-5" id="softwareRule">
+            <p class="fs-3 fw-bold">軟體規格書</p>
+            <p>：包含「輸出與輸入（資料）規格」、「功能規格與介面規格」、「軟體測試規劃書」與其他有利於軟體開發之規格。</p>
+            <p class="fs-5 fw-bold">輸入規格:</p>
+            <ul>
+                <li>可在畫布上隨意點擊，畫布大小至少為 600 x 600。</li>
+                <li>支援讀入測試資料檔案，每檔案包含多組座標點。</li>
+                <li>輸入資料格式：
+                    <ul>
+                        <li>每組測試資料以數字開頭，代表點的數量。</li>
+                        <li>後續每行為一個點的座標，格式為 <code>x y</code>。</li>
+                    </ul>
+                </li>
+            </ul>
+            <p class="fs-5 fw-bold">輸出規格:</p>
+            <ul>
+                <li>於畫布上繪製 Voronoi 圖形，包含點及其對應的邊界。</li>
+                <li>輸出包含點與邊界的結果檔案，格式如下：
+                    <ul>
+                        <li><code>P x y</code>：每個點佔一行，兩整數 x, y 為座標。</li>
+                        <li><code>E x1 y1 x2 y2</code>：線段的起點和終點，x1≦x2 或 x1=x2, y1≦y2。</li>
+                    </ul>
+                </li>
+                <li>輸出文字檔案內容：
+                    <ul>
+                        <li>座標點排列在前半段，以 lexical order 排序（先排序 x，若相同再排序 y）。</li>
+                        <li>線段排列在後半段，按 x1, y1, x2, y2 的順序進行字典序排序。</li>
+                    </ul>
+                </li>
+                <li>範例輸出檔案內容：
+                    <div class="card" style="width: 18rem;">
+                        <div class="col px-3">
+                            P 103 200
+                        </div>
+                        <div class="col px-3">
+                            P 193 64
+                        </div>
+                        <div class="col px-3">
+                            P 193 370
+                        </div>
+                        <div class="col px-3">
+                            P 283 200
+                        </div>
+                        <div class="col px-3">
+                            E 0 34 193 161
+                        </div>
+                        <div class="col px-3">
+                            E 0 363 193 261
+                        </div>
+                        <div class="col px-3">
+                            E 193 161 193 261
+                        </div>
+                        <div class="col px-3">
+                            E 193 161 437 0
+                        </div>
+                        <div class="col px-3">
+                            E 193 261 600 476
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            
+            <p class="fs-5 fw-bold">功能規格:</p>
+            <ul>
+                <li>手動點擊畫布以新增點。</li>
+                <li>點擊<b>Read File</b>讀入測試資料檔案以生成 Voronoi 圖形。
+                    <ul>
+                        <li>點擊<b>NextGraph</b>依序測資順序循環呈現測試資料</li>
+                    </ul>
+                </li>
+                <li>支援兩種執行模式：
+                    <ul>
+                        <li><b>Run 模式：</b>從當時的狀態執行至最後並將最終結果畫出。</li>
+                        <li><b>Step by Step 模式：</b>每次 merge 之前暫停，並以不同顏色顯示左右兩個 Voronoi 圖形。</li>
+                        <ul>
+                            <li>先點擊<b>Step by Step</b>乙次。</li>
+                            <li>持續點擊<b>Continue</b>以階段呈現merge過程。</li>
+                            <li>當完成Voronoi Diagram後，需再次點擊<b>Step by Step</b>重置。</li>
+                        </ul>
+                    </ul>
+                </li>
+                <li>點擊<b>Write File</b>可將結果輸出至文字檔案，包含點與邊界資訊。</li>
+                <li>支援讀入已生成的輸出檔案並顯示其對應的 Voronoi 圖形。</li>
+                <li>點擊<b>Clear</b>清除所有畫布資訊並重置操作。</li>
+            </ul>
+        
+            <p class="fs-5 fw-bold">介面規格:</p>            
+            <ul>
+                <p>介面</p>
+                <img src="./static/imgs/interface.png" alt="UI_interface" width="500px">                
+            </ul>
+
+            <p class="fs-5 fw-bold">軟體測試規劃書:</p>
             <hr>
         </div>
-        <div class="container">
-            <p>軟體說明：為軟體安裝與使用之說明，請提供安裝與使用時需特別注意之要點，以減少評分之障礙。</p>
+
+
+        <div class="container px-5" id="softwareIntro">
+            <p class="fs-3 fw-bold">軟體說明</p>
+            <table class="table table-bordered">
+                <tr>
+                    <th>項目</th>
+                    <th>說明</th>
+                </tr>
+                <tr>
+                    <td>程式語言</td>
+                    <td>Python</td>
+                </tr>
+                <tr>
+                    <td>編譯器</td>
+                    <td>Python 3.11.4</td>
+                </tr>
+                <tr>
+                    <td>相依套件</td>
+                    <td>
+                        <ul>
+                            <li>tkinter</li>
+                            <li>math</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>編譯方式</td>
+                    <td>
+                        <ul>
+                            <li>安裝pyinstaller套件</li>
+                            <li>執行指令: pyinstaller --onefile --windowed [檔案名稱]</li>
+                        </ul>
+                    </td>
+                </tr>
+            </table>
             <hr>
         </div>
-        <div class="container">
-            <p>程式設計：將演算法於程式設計中，需要使用的資料結構，所需注意的細節或特別的技巧，在此部分講述。如果演算法有改良之處，亦在此描述。</p>
+
+
+
+        <div class="container  px-5" id="codeDesign">
+            <p class="fs-3 fw-bold">程式設計</p>
+                <p>：將演算法於程式設計中，需要使用的資料結構，所需注意的細節或特別的技巧，在此部分講述。如果演算法有改良之處，亦在此描述。</p>
+                <p class="fs-4">Class</p>
+                    <ul>
+                        <li><b>Voronoi</b>
+                            <p>此Class主要處理與Vornoi Diagram相關的功能，舉例:</p>
+                            <ul>
+                                <li>解voronoi diagram</li>
+                                <li>convex hull</li>
+                                <li>devide and conquer</li>
+                                <li>hyper plane</li>
+                            </ul>
+                        </li>
+                        <li><b>Graph</b>
+                            <p>此Class主要處理與Graph相關的功能，舉例:</p>
+                            <ul>
+                                <li>計算line兩端點的最大邊界</li>
+                                <li>裁切線段回傳畫布上兩端點</li>
+                                <li>新增、紀錄點線</li>
+                                <li>找出線段交點</li>
+                                <li>與線段相關的功能</li>
+                            </ul>
+                        </li>
+                        <li><b>Uiapp</b>
+                            <p>此Class主要處理與UI相關的功能，舉例:</p>
+                            <ul>
+                                <li>處理button的點擊及call function</li>
+                                <li>處理Interrupt</li>
+                                <li>處理Input及Output</li>
+                            </ul>
+                        </li>
+                    </ul>
+                <hr>
+
+
+                <p class="fs-4">資料結構</p>
+                <ul>
+                    <li><p class="fs-5">點</p></li>
+                        <p>點的資料結構為一個list，存放每個點的座標，格式為[(x, y), ..., (x, y)]。</p>
+                        <p>點的id資料結構為一個list，存放每個點的id，格式為[id, ..., id]。</p>
+                    <li><p class="fs-5">線段</p></li>
+                        <p>線段的資料結構為一個list，存放每條線段的資訊，格式為</p>
+                        <p>[[draw1, draw2, point_a, point_b, edge_piont1, edge_point2, id],...]。</p>
+                    <ul>
+                        <li>draw1, draw2</li>
+                            <p>draw1, draw2為畫布上的線段兩端點。</p>
+                        <li>point_a, point_b</li>
+                            <p>point_a, point_b為畫布上的兩點畫出來的Voronoi線段。</p>
+                        <li>edge_piont1, edge_point2</li>
+                            <p>edge_piont1, edge_point2為超出畫布外但仍為此線段的兩端點。</p>
+                        <li>id</li>
+                            <p>id為線段的id。</p>
+                    </ul>
+                </ul>
+                <hr>
+
+
+            <p class="fs-4">演算法</p>
+                <p>三點以下: 暴力解</p>
+                    <li>一個點</li>
+                        <p>一個點不存在Voronoi線段，因此回傳Voronoi空集合。</p>
+                    <li>兩個點</li>
+                        <p>兩個點的Voronoi線段為兩點的中垂線。</p>
+                    <li>三個點</li>
+                        <p></p>
+
+                <p>四點以上: Devide and conquer</p>
+            
+
             <hr>
         </div>
-        <div class="container">
-            <p>軟體測試與實驗結果：軟體之測試報告。包含測試的環境、使用的電腦硬體系統（CPU型號、記憶體容量等）、作業系統、編譯器名稱及版本。然後列出測試數據。必須列出程式可以執行之範例數據（最好列出程式可以執行之極限數據）。如果有些情況無法執行，請列出可能原因及可能解決之道。並請提供測試時之「測試輸入檔」與「測試輸出檔」。</p>
+
+
+        <div class="container px-5" id="testResult">
+            <p class="fs-3 fw-bold">軟體測試與實驗結果：</p>
+            <p>
+                軟體之測試報告。包含測試的環境、使用的電腦硬體系統（CPU型號、記憶體容量等）、作業系統、編譯器名稱及版本。然後列出測試數據。
+                必須列出程式可以執行之範例數據（最好列出程式可以執行之極限數據）。
+                如果有些情況無法執行，請列出可能原因及可能解決之道。並請提供測試時之「測試輸入檔」與「測試輸出檔」。
+            </p>
             <hr>
         </div>
-        <div class="container">
-            <p>結論與心得：說明所得結論、可以改良之處與心得等。</p>
+
+
+        <div class="container px-5" id="conclusion">
+            <p class="fs-3 fw-bold">結論與心得</p>
+            <p>：說明所得結論、可以改良之處與心得等。</p>
             <hr>
         </div>
-        <div class="container">
-            <p>附錄：請連結「程式原始碼合併檔」、「測試輸入檔」、「測試輸出檔」等與報告相關之資料。</p>
+
+
+        <div class="container px-5" id="appendix">
+            <p class="fs-3 fw-bold">附錄</p>
+            <p>：請連結「程式原始碼合併檔」、「測試輸入檔」、「測試輸出檔」等與報告相關之資料。</p>
             <hr>
         </div>
         
@@ -84,7 +302,4 @@
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.1/dist/umd/popper.min.js" integrity="sha384-W8fXfP3gkOKtndU4JGtKDvXbO53Wy8SZCQHczT5FMiiqmQfUpWbYdTil/SxwZgAN" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.min.js" integrity="sha384-skAcpIdS7UcVUC05LJ9Dxay8AXcDYfBJqt1CJ85S/CFujBsIzCIv+l9liuYLaMQ/" crossorigin="anonymous"></script>
-    <script>
-
-    </script>
 </html>
