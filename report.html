@@ -368,7 +368,7 @@
                                     
                                     <li class="list-group-item">
                                         <p class="fs-5 fw-bold">找出 Hyperplane</p>
-                                        <p class="fs-5">1. 初始化</p>
+                                        <p class="fs-6">1. 初始化</p>
                                         <p>輸入資料：</p>
                                         <ul>
                                             <li>上下公切線：<code>上公切線 T_u = (P_u, Q_u)</code>，<code>下公切線 T_l = (P_l, Q_l)</code>。</li>
@@ -381,7 +381,7 @@
                                             <li>記錄 Hyperplane 的起始點與生成點。</li>
                                         </ol><br>
                                     
-                                        <p class="fs-5">2. 從第一條 Hyperplane 開始遍歷</p>
+                                        <p class="fs-6">2. 從第一條 Hyperplane 開始遍歷</p>
                                         <p>Hyperplane 的延伸方向：</p>
                                         <ol class="ms-4">
                                             <li>從第一條 Hyperplane 開始，計算其與所有 Voronoi 邊的交點。</li>
@@ -389,7 +389,7 @@
                                             <li>檢查交點是否落在某條 Voronoi 邊的內部，確認交點所屬的 Voronoi 邊。</li>
                                         </ol><br>
                                     
-                                        <p class="fs-5">3. 走路法</p>
+                                        <p class="fs-6">3. 走路法</p>
                                         <p>找到交點後，使用走路法確定下一條 Hyperplane：</p>
                                         <ol class="ms-4">
                                             <li>
@@ -414,7 +414,7 @@
                                             </li>
                                         </ol>
                                     
-                                        <p class="fs-5">4. 重複操作</p>
+                                        <p class="fs-6">4. 重複操作</p>
                                         <p>
                                             重複以上步驟，從當前 Hyperplane 的終點開始，遍歷所有相鄰的 Voronoi 邊。<br>
                                             繼續延伸 Hyperplane，直到：
@@ -566,14 +566,20 @@
                     <th>項目</th>
                     <th>說明</th>
                 </tr>
+
+
                 <tr>
                     <td>程式語言</td>
                     <td>Python</td>
                 </tr>
+
+
                 <tr>
                     <td>編譯器</td>
                     <td>Python 3.11.4</td>
                 </tr>
+
+
                 <tr>
                     <td>相依套件</td>
                     <td>
@@ -583,6 +589,8 @@
                         </ul>
                     </td>
                 </tr>
+
+
                 <tr>
                     <td>編譯方式</td>
                     <td>
@@ -592,6 +600,29 @@
                         </ul>
                     </td>
                 </tr>
+
+                <tr>
+                    <td>測試環境</td>
+                    <td>
+                        <ul>
+                            <li>作業系統: Windows 10</li>
+                            <li>CPU: Intel(R) Core(TM) i7-8700 CPU </li>
+                            <li>記憶體: 24.00 GB</li>
+                        </ul>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>測試結果</td>
+                    <td>
+                        <ul>
+                            <li>測試輸入檔: <a href="./static/test/input.txt" download>test_input.txt</a></li>
+                            <li>測試輸出檔: <a href="./static/test/output.txt" download>test_output.txt</a></li>
+                        </ul>
+                    </td>
+                </tr>
+
+
             </table>
 
 
