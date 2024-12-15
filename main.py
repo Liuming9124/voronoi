@@ -1,10 +1,9 @@
 # $LAN=PYTHON$
+# M133040015 劉恭銘
 import tkinter as tk
 from tkinter import filedialog
 import math
 maxsize = 1000000000
-
-# TODO Build, Exception of four points
 
 # variable----------------------------------------------------------------------------------------------------------------
 class Graph():
@@ -131,7 +130,7 @@ class Graph():
 
         # 畫線
         eID = self.canvas.create_line(canvas_x1, canvas_y1, canvas_x2, canvas_y2, fill=color, tags="line")
-        self.edges.append([canvasP[0], canvasP[1], point1, point2, [dx1, dy1], [dx2, dy2], eID]) # TODO maybe only store output is okey
+        self.edges.append([canvasP[0], canvasP[1], point1, point2, [dx1, dy1], [dx2, dy2], eID])
         return eID
 
     # 裁切線段回傳畫布上兩端點 -> return [[x1, y1], [x2, y2]]
@@ -513,7 +512,7 @@ class Graph():
 
         # 精度問題 -> round 4 位
         if (point == line_point1 or point == line_point2):
-            return False # TODO 正多邊形的特例
+            return False
         online_flag = False
         onpart_flag = False
         slope, b = self.find_line(line_point1, line_point2)
@@ -540,7 +539,7 @@ class Graph():
     # 計算兩線段是否有交點 -> return [T or F, [x, y]]  TODO check return , ERROR
     def intersectionTwoLineparts(self, line1, line2):
         print("intersection in", line1, line2)
-        # line1, line2: 兩條線段的座標 ; 回傳: 是否有交點, 交點座標 # TODO 垂直線例外處理 maybe finished
+        # line1, line2: 兩條線段的座標 ; 回傳: 是否有交點, 交點座標
         slope1, b1 = self.find_line(line1[0], line1[1])
         slope2, b2 = self.find_line(line2[0], line2[1])
         # 找出交點
@@ -669,7 +668,7 @@ class voronoi():
             # merge
             self.uiapp.stop()
             # mpoints, mvor = 
-            self.merge(left, right) # merge(left, right) # TODO doing
+            self.merge(left, right) # merge(left, right)
             return left+right, self.vor
     
     # devide points into left and right -> return [left, left_id, right, right_id]
@@ -763,7 +762,7 @@ class voronoi():
 
         self.uiapp.stop()
         self.graph.clear_lines()
-        return ch #, chEdges # TODO must finished
+        return ch #, chEdges
     
     # return angle -> polar angle with respect to the base point
     def angle(self, o, p):  # calculate polar angle with respect to the base point
@@ -920,11 +919,11 @@ class voronoi():
                 intersection = intersections[0][0]
                 touchLine = intersections[0][1]
                 if skipID == intersections[0][1][6]:
-                    if len(intersections) > 1:  # TODO HURRY last hyperplane
+                    if len(intersections) > 1:
                         intersection = intersections[1][0]
                         touchLine = intersections[1][1]
                 # intersection = intersections[0]
-                if test and test_index <= 2: # TODO not operate out of boundary
+                if test and test_index <= 2:
                     self.canvas.create_oval(intersection[0] - 3, intersection[1] - 3, intersection[0] + 3, intersection[1] + 3, fill='yellow')
                     # self.uiapp.stop()
             else:
@@ -978,7 +977,7 @@ class voronoi():
                     newFoot.append(newFootCandidate[0])
             print('oldFoot', footl, footr)
             print('newFoot', newFoot)
-            footl, footr = newFoot[0], newFoot[1] # TODO BUG here with bug0.txt
+            footl, footr = newFoot[0], newFoot[1]
             if test and test_index <= 3:
                 self.graph.add_line(footl, footr, [0, 1, 0], 'black')
             # self.uiapp.stop()
@@ -1165,10 +1164,10 @@ class voronoi():
 
 
 
-    # return self.convex_hull(points), EdgePoints # TODO modify return structure
+    # return self.convex_hull(points), EdgePoints
     def compute_voronoi_three(self, points):
         # store edges return
-        EdgePoints = [] # TODO check whether store origin edges with maxsize and minsize
+        EdgePoints = []
         # 找出三點共線
         a, b = self.graph.find_line(points[0], points[1])
         a1, b1 = self.graph.find_line(points[0], points[2])
@@ -1241,7 +1240,7 @@ class voronoi():
             drawEdges = self.graph.cal_triangle_line((center_x, center_y), points[0], points[1], points[2], (x1, y1), (x2, y2), (x3, y3))
             for edge in drawEdges: # edge =  (mid, one, status, point1, point2)
                 EdgePoint = []
-                dx1, dy1, dx2, dy2 = self.graph.calculate_line_endpoints(edge[0], edge[1], edge[2]) # [dx1, dy1, dx2, dy2] # TODO clip bug maybe finished
+                dx1, dy1, dx2, dy2 = self.graph.calculate_line_endpoints(edge[0], edge[1], edge[2]) # [dx1, dy1, dx2, dy2]
                 Point1 = [dx1, dy1]
                 Point2 = [dx2, dy2]
                 # [draw1, draw2, point_a, point_b, edge_piont1, edge_point2, id]
