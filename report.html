@@ -55,18 +55,18 @@
     <body class="p-5 bg-color bg-light">
 
 
-        <div class="container px-5">
-            <p>題目: Voronoi Diagram 實作報告</p>
-            <p>系級: 資訊工程研究所113級</p>
-            <p>姓名: 劉恭銘</p>
-            <p>學號: M133040015</p>
-            <hr>
+        <div class="container px-5" style="width:max-content;;">
+            <p class="fs-3 fw-bold justify-content-center">題目: Voronoi Diagram 實作報告</p>
+            <p class="fs-3 fw-bold">系級: 資訊工程研究所113級</p>
+            <p class="fs-3 fw-bold">姓名: 劉恭銘</p>
+            <p class="fs-3 fw-bold">學號: M133040015</p>
         </div>
-
-
+        
+        
         <div class="container px-5" id="softwareRule">
+            <hr>
             <p class="fs-3 fw-bold">軟體規格書</p>
-            <p>：包含「輸出與輸入（資料）規格」、「功能規格與介面規格」、「軟體測試規劃書」與其他有利於軟體開發之規格。</p>
+            <!-- <p>：包含「輸出與輸入（資料）規格」、「功能規格與介面規格」、「軟體測試規劃書」與其他有利於軟體開發之規格。</p> -->
             <p class="fs-5 fw-bold">輸入規格:</p>
             <ul>
                 <li>可在畫布上隨意點擊，畫布大小至少為 600 x 600。</li>
@@ -125,14 +125,6 @@
 
         <div class="container px-5" id="softwareIntro">
             <p class="fs-3 fw-bold">軟體說明</p>
-
-            
-            <div class="container p-2">
-                <a href="./static/main.exe" download="main.exe">
-                    <button type="button" class="btn btn-secondary">軟體執行檔案下載</button>
-                </a>
-            </div><br>
-
             
             <p class="fs-5 fw-bold">功能規格:</p>
             <ul>
@@ -170,7 +162,7 @@
 
         <div class="container  px-5" id="codeDesign">
             <p class="fs-3 fw-bold">程式設計</p>
-                <p>：將演算法於程式設計中，需要使用的資料結構，所需注意的細節或特別的技巧，在此部分講述。如果演算法有改良之處，亦在此描述。</p>
+                <!-- <p>：將演算法於程式設計中，需要使用的資料結構，所需注意的細節或特別的技巧，在此部分講述。如果演算法有改良之處，亦在此描述。</p> -->
                 <p class="fs-4">Class</p>
                     <ul>
                         <li><b>Voronoi</b>
@@ -562,11 +554,11 @@
 
         <div class="container px-5" id="testResult">
             <p class="fs-3 fw-bold">軟體測試與實驗結果：</p>
-            <p>
+            <!-- <p>
                 軟體之測試報告。包含測試的環境、使用的電腦硬體系統（CPU型號、記憶體容量等）、作業系統、編譯器名稱及版本。然後列出測試數據。
                 必須列出程式可以執行之範例數據（最好列出程式可以執行之極限數據）。
                 如果有些情況無法執行，請列出可能原因及可能解決之道。並請提供測試時之「測試輸入檔」與「測試輸出檔」。
-            </p>
+            </p> -->
 
 
 
@@ -639,8 +631,9 @@
 
             <div class="container">
                 <p class="fs-4 fw-bold">實驗結果</p>
+                <p>點數量:2,3,4,5,6，每種點數有三筆測資，第三筆為共線。</p>
 
-                <div class="col ">
+                <div class="col">
                     <div class="row">
                         <div class="col">
                             <img src="./static/imgs/output/2-1.png" alt="acute_triangle" width="350px">
@@ -651,9 +644,8 @@
                         <div class="col">
                             <img src="./static/imgs/output/2-3.png" alt="acute_triangle" width="350px">
                         </div>
-                    </div>
-                    
-                    <div class="row">
+
+
                         <div class="col">
                             <img src="./static/imgs/output/3-1.png" alt="acute_triangle" width="350px">
                         </div>
@@ -663,9 +655,8 @@
                         <div class="col">
                             <img src="./static/imgs/output/3-3.png" alt="acute_triangle" width="350px">
                         </div>
-                    </div>
-                    
-                    <div class="row">
+                        
+
                         <div class="col">
                             <img src="./static/imgs/output/4-1.png" alt="acute_triangle" width="350px">
                         </div>
@@ -675,9 +666,8 @@
                         <div class="col">
                             <img src="./static/imgs/output/4-3.png" alt="acute_triangle" width="350px">
                         </div>
-                    </div>
-                    
-                    <div class="row">
+                        
+
                         <div class="col">
                             <img src="./static/imgs/output/5-1.png" alt="acute_triangle" width="350px">
                         </div>
@@ -687,9 +677,8 @@
                         <div class="col">
                             <img src="./static/imgs/output/5-3.png" alt="acute_triangle" width="350px">
                         </div>
-                    </div>
-                    
-                    <div class="row">
+                        
+
                         <div class="col">
                             <img src="./static/imgs/output/6-1.png" alt="acute_triangle" width="350px">
                         </div>
@@ -700,23 +689,128 @@
                             <img src="./static/imgs/output/6-3.png" alt="acute_triangle" width="350px">
                         </div>
                     </div>
+                </div>
+                <hr>
 
+
+
+                <div class="p-3">
+                    <p class="fs-4">結果分析</p>
+                    <p>
+                        可以看到四個點的第二筆資料所運算出來的Voronoi Diagram是錯誤的，其中一條Voronoi在擦除時擦到錯誤的邊，
+                        在判斷擦除的地方需要再次是否順逆時鐘是否判斷正確，也要確定Voronoi edge存放的順序是否正確。<br><br>
+
+                        在大部分情況下2-6點都是正確的，但在7點以上的情況下，Voronoi的結構遞迴會出現錯誤，因此只能merge一次，無法遞迴merge。<br><br>
+
+                        我有嘗試把程式碼修正成可以正確遞迴，但是在Merge第二次時會發現目前的資料結構無法處理超過六點的情況，需要遵循正確的資料結構才有辦法往下處理merge超過兩次的情況。
+                    </p>
                 </div>
 
             <hr>
         </div>
 
 
-        <div class="container px-5" id="conclusion">
+        <!-- <div class="container" id="conclusion">
             <p class="fs-3 fw-bold">結論與心得</p>
             <p>：說明所得結論、可以改良之處與心得等。</p>
             <hr>
+        </div> -->
+
+
+        <div class="container" id="conclusion">
+            <p class="fs-3 fw-bold">結論與心得</p>
+            
+            <p class="fs-5 fw-bold">結論</p>
+            <p>
+                本次 Voronoi Diagram 的實作不僅成功驗證了基本的理論，也通過測試數據證明了其在小規模點集上的正確性。
+                透過 Divide and Conquer 的方式有效地處理了多點的分割與合併，並在大部分情況下生成了正確的 Voronoi 結構。
+                然而，在進行多次遞迴合併時，由於資料結構設計的限制，無法正確處理超過六個點的情況，這顯示現有演算法的可擴展性尚有改善空間。
+            </p>
+            
+            <p class="fs-5 fw-bold">可以改良之處</p>
+            <ul>
+                <li>
+                    <b>資料結構優化：</b>
+                    目前的資料結構無法支持超過六點的情況，應該考慮改進資料的存取方式，需要使用Vornoi講義中正確的資料結構來改善。
+                </li>
+                <li>
+                    <b>擦除邊的判斷邏輯：</b>
+                    某些情況下擦除錯誤邊，可能是因為順逆時針判斷或資料排序問題，這部分需要更嚴格的檢查和測試。
+                </li>
+                <li>
+                    <b>演算法優化：</b>
+                    在遞迴合併的實現上，應加入更多的邏輯檢查和例外處理，減少程式執行過程中可能出現的錯誤。
+                    同時，在Convex Hull合併的方法上，應該要改善時間複雜度，找出上下切線之後應該妥善刪除不必要的點。
+                </li>
+            </ul>
+            
+            <p class="fs-5 fw-bold">心得</p>
+            <p>
+                在這次專案中，從理解理論到實現演算法是一個充滿挑戰的過程。Divide and Conquer 的演算法設計讓我更深入理解了 Voronoi Diagram 的生成原理。
+                即使面對遞迴合併中的困難，透過分析錯誤並嘗試解決，增強了我對問題的分解能力和邏輯思考能力。
+            </p>
+            <p>
+                其中，在撰寫Voronoi的過程中有許多細節需要注意:<br>
+                <li>像是在不同種點數的情況下，會有不同的特例需要處理</li>
+                <li>判斷點是否於相同位置時，存放點的精度問題也需要額外判斷，以防止錯誤的發生</li>
+            </p>
+            <p>
+                這次專案的實現還讓我了解到軟體設計中測試的重要性。在多次測試的過程中，不僅發現了設計中的漏洞，也提升了程式的穩定性。
+            </p>
+            <p>
+                這是一份充滿挑戰的專案，但也是一份充滿收穫的專案。通過這次實作，我不僅提升了對演算法的理解和應用，也從中得到許多寶貴的經驗和教訓。
+            </p>
+            <hr>
         </div>
+        
 
 
-        <div class="container px-5" id="appendix">
+
+        <div class="container" id="appendix">
             <p class="fs-3 fw-bold">附錄</p>
-            <p>：請連結「程式原始碼合併檔」、「測試輸入檔」、「測試輸出檔」等與報告相關之資料。</p>
+            <!-- <p>：請連結「程式原始碼合併檔」、「測試輸入檔」、「測試輸出檔」等與報告相關之資料。</p> -->
+
+            <table class="table table-bordered">
+                <tr>
+                    <th>項目</th>
+                    <th>下載</th>
+                </tr>
+
+
+                <tr>
+                    <td>主程式</td>
+                    <td>
+                        <a href="./static/main.exe" download="main.exe">
+                            <button type="button" class="btn btn-secondary">Download</button>
+                        </a>
+                    </td>
+                </tr>
+
+
+                <tr>
+                    <td>測試資料Input</td>
+                    <td>
+                        <a href="./static/test/.txt" download="input.txt">
+                            <button type="button" class="btn btn-secondary">Download</button>
+                        </a>
+                    </td>
+                </tr>
+
+
+                <tr>
+                    <td>測試資料Output</td>
+                    <td>
+                        <a href="./static/test/output.7z" download="output.7z">
+                            <button type="button" class="btn btn-secondary">Download</button>
+                        </a>
+                    </td>
+                </tr>
+
+
+            </table>
+
+
+
             <hr>
         </div>
         
