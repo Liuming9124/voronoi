@@ -42,9 +42,6 @@
                     </ul>
                 </div>
             </div>
-            <!-- <div class="col d-flex justify-content-end pe-5">
-                <a class="btn btn-outline-color-5" href="/">M133040015</a>
-            </div> -->
         </div>
     <br>
     <br>
@@ -76,6 +73,8 @@
                     </ul>
                 </li>
             </ul>
+
+
             <p class="fs-5 fw-bold">輸出規格:</p>
             <ul>
                 <li>於畫布上繪製 Voronoi 圖形，包含點及其對應的邊界。</li>
@@ -108,6 +107,23 @@
                 </li>
             </ul>
             
+
+            <p class="fs-5 fw-bold">軟體測試規劃書:</p>
+            <p>小於等於六點的情況下以隨機及共線的方式進行測試</p>
+            <ul>
+                <li>三點以下，暴力解</li>
+                <li>四點以上，進行一次divide及一次merge</li>
+            </ul>
+            <hr>
+        </div>
+
+
+        <div class="container px-5" id="softwareIntro">
+            <p class="fs-3 fw-bold">軟體說明</p>
+
+
+
+            
             <p class="fs-5 fw-bold">功能規格:</p>
             <ul>
                 <li>手動點擊畫布以新增點。</li>
@@ -137,46 +153,6 @@
                 <p>介面</p>
                 <img src="./static/imgs/interface.png" alt="UI_interface" width="500px">                
             </ul>
-
-            <p class="fs-5 fw-bold">軟體測試規劃書:</p>
-            <hr>
-        </div>
-
-
-        <div class="container px-5" id="softwareIntro">
-            <p class="fs-3 fw-bold">軟體說明</p>
-            <table class="table table-bordered">
-                <tr>
-                    <th>項目</th>
-                    <th>說明</th>
-                </tr>
-                <tr>
-                    <td>程式語言</td>
-                    <td>Python</td>
-                </tr>
-                <tr>
-                    <td>編譯器</td>
-                    <td>Python 3.11.4</td>
-                </tr>
-                <tr>
-                    <td>相依套件</td>
-                    <td>
-                        <ul>
-                            <li>tkinter</li>
-                            <li>math</li>
-                        </ul>
-                    </td>
-                </tr>
-                <tr>
-                    <td>編譯方式</td>
-                    <td>
-                        <ul>
-                            <li>安裝pyinstaller套件</li>
-                            <li>執行指令: pyinstaller --onefile --windowed [檔案名稱]</li>
-                        </ul>
-                    </td>
-                </tr>
-            </table>
             <hr>
         </div>
 
@@ -192,7 +168,7 @@
                             <ul>
                                 <li>解voronoi diagram</li>
                                 <li>convex hull</li>
-                                <li>devide and conquer</li>
+                                <li>divide and conquer</li>
                                 <li>hyper plane</li>
                             </ul>
                         </li>
@@ -274,7 +250,7 @@
                                                 <li>判斷三角形的類型，若為三點共線須進行例外處理(回傳兩條Voronoi線段: 由三點中的中間頂點與另外兩點的中垂腺)</li>
                                                 <li>找出三角形的外心，外心為三點的垂直平分線的交點</li>
                                                 <li><b>銳角三角形</b>：由外心向三頂點的射線為 Voronoi 線段</li>
-                                                <li><b>鈍角三角形</b>：與 3-1 不同之處在於其中一條 Voronoi 線段會由外心遠離兩個銳角頂點，形成與鈍角頂點相對的線段</li>
+                                                <li><b>鈍角三角形</b>：與 3-1 不同之處在於其中一條 Voronoi 線段會由外心遠離兩個銳角頂點，此部分要特別判斷。</li>
                                             </ol>
                                         </p>
                                     </div>
@@ -299,7 +275,7 @@
                         <br><br>
                     
 
-                    <p class="fs-5 fw-bold">四點以上: Devide and conquer</p>
+                    <p class="fs-5 fw-bold">四點以上: divide and conquer</p>
 
                         <div class="container mt-4">
                         
@@ -389,70 +365,185 @@
                                         </p>
                                     </li>
 
-
+                                    
                                     <li class="list-group-item">
-                                        <p class="fs-5 fw-bold">計算中間的垂直平分線（Hyperplane）</p>
-                                        <p>對下公切線與上公切線進行處理，找到其垂直平分線，這是左右兩部分 Voronoi Diagram 的分界線。</p>
-                                        <p>使用一條由下公切線開始，垂直向上的射線，逐步向上找到各條垂直平分線。</p>
-                                    </li>
-                        
-
-                                    <li class="list-group-item">
-                                        <p class="fs-5 fw-bold">處理相交點與線段</p>
-                                        <p>垂直平分線向上延伸時，可能與左右兩邊的 Voronoi 線段相交。</p>
+                                        <p class="fs-5 fw-bold">找出 Hyperplane</p>
+                                        <p class="fs-5">1. 初始化</p>
+                                        <p>輸入資料：</p>
                                         <ul>
-                                            <li>對每個相交點進行處理。</li>
-                                            <li>刪除遠離垂直平分線的 Voronoi 線段。</li>
-                                            <li>將新的線段加入合併後的 Voronoi Diagram。</li>
+                                            <li>上下公切線：<code>上公切線 T_u = (P_u, Q_u)</code>，<code>下公切線 T_l = (P_l, Q_l)</code>。</li>
+                                            <li>Voronoi 圖的邊集合 <code>E_v</code>，每條邊表示為：<code>[draw1, draw2, point_a, point_b, edge_piont1, edge_point2, id]</code>。</li>
+                                        </ul>
+                                        <p><strong>第一條 Hyperplane：</strong></p>
+                                        <ol class="ms-4">
+                                            <li>計算上公切線的垂直平分線。</li>
+                                            <li>將該線段由畫布邊界延伸至與第一個與voronoi edge交集的點，作為第一條 Hyperplane。</li>
+                                            <li>記錄 Hyperplane 的起始點與生成點。</li>
+                                        </ol><br>
+                                    
+                                        <p class="fs-5">2. 從第一條 Hyperplane 開始遍歷</p>
+                                        <p>Hyperplane 的延伸方向：</p>
+                                        <ol class="ms-4">
+                                            <li>從第一條 Hyperplane 開始，計算其與所有 Voronoi 邊的交點。</li>
+                                            <li>找出與 Hyperplane 最近的交點，記錄該交點。</li>
+                                            <li>檢查交點是否落在某條 Voronoi 邊的內部，確認交點所屬的 Voronoi 邊。</li>
+                                        </ol><br>
+                                    
+                                        <p class="fs-5">3. 走路法</p>
+                                        <p>找到交點後，使用走路法確定下一條 Hyperplane：</p>
+                                        <ol class="ms-4">
+                                            <li>
+                                                找到與交點相鄰的 Voronoi 邊：
+                                                <ul>
+                                                    <li>檢查交點與 Voronoi 邊的生成點關係，確定哪條邊相鄰。</li>
+                                                    <li>記錄新邊的生成點，例如 <code>P_a</code> 和 <code>P_b</code>。</li>
+                                                </ul>
+                                            </li>
+                                            <li>
+                                                計算下一條 Hyperplane：
+                                                <ul>
+                                                    <li>選取相鄰邊的生成點 <code>P_b</code> 和 <code>P_c</code>。</li>
+                                                    <li>計算 <code>P_b</code> 和 <code>P_c</code> 的垂直平分線，作為新的 Hyperplane。</li>
+                                                </ul>
+                                            </li>
+                                            <li>
+                                                更新 Hyperplane 的終點：
+                                                <ul>
+                                                    <li>找到 Hyperplane 與畫布邊界或其他 Voronoi 邊的最近交點，作為終點。</li>
+                                                </ul>
+                                            </li>
+                                        </ol>
+                                    
+                                        <p class="fs-5">4. 重複操作</p>
+                                        <p>
+                                            重複以上步驟，從當前 Hyperplane 的終點開始，遍歷所有相鄰的 Voronoi 邊。<br>
+                                            繼續延伸 Hyperplane，直到：
+                                        </p>
+                                        <ul class="ms-4">
+                                            <li>Hyperplane 與畫布邊界相交。</li>
+                                            <li>Hyperplane 遍歷完所有 Voronoi 邊。</li>
                                         </ul>
                                     </li>
+
+
+
+                                    <li class="list-group-item">
+                                        <p class="fs-5 fw-bold">擦除 Voronoi 線段</p>
+                                        <p>擦除 Voronoi 線段的主要步驟如下：</p>
+                                    
+                                        <p class="fs-6">1. 根據 Hyperplane 的旋轉方向進行判斷</p>
+                                        <ol class="ms-4">
+                                            <li>計算當前 Hyperplane 與上一條 Hyperplane 的方向向量。</li>
+                                            <li>通過向量的 <strong>叉積 (Cross Product)</strong> 判斷旋轉方向：
+                                                <ul>
+                                                    <li>若 <strong>叉積為正</strong>，表示當前 Hyperplane 的方向是逆時針。</li>
+                                                    <li>若 <strong>叉積為負</strong>，表示當前 Hyperplane 的方向是順時針。</li>
+                                                </ul>
+                                            </li>
+                                        </ol><br>
+                                    
+                                        <p class="fs-6">2. 擦除與 Hyperplane 相交的 Voronoi 線段</p>
+                                        <p>根據旋轉方向，對交集 Voronoi 線段進行擦除：</p>
+                                        <ol class="ms-4">
+                                            <li>對所有與當前 Hyperplane 相交的 Voronoi 線段進行遍歷。</li>
+                                            <li>計算交點與該 Voronoi 線段的兩端點形成的向量。</li>
+                                            <li>使用這些向量與 Hyperplane 的方向向量計算叉積，確定需要保留或擦除的部分：
+                                                <ul>
+                                                    <li>若旋轉方向為 <strong>順時針</strong>，則擦除交點右側（遠離 Hyperplane 起始點方向）的部分。</li>
+                                                    <li>若旋轉方向為 <strong>逆時針</strong>，則擦除交點左側（靠近 Hyperplane 起始點方向）的部分。</li>
+                                                </ul>
+                                            </li>
+                                            <li>對於需要擦除的部分，更新 Voronoi 線段的終點或起點，並在畫布上移除相應的部分。</li>
+                                        </ol><br>
+                                    
+                                        <p class="fs-6">3. 例外情況處理</p>
+                                        <p>若 Hyperplane 與 Voronoi 線段完全共線：</p>
+                                        <ul class="ms-4">
+                                            <li>判斷 Hyperplane 與 Voronoi 線段的方向一致性。</li>
+                                            <li>僅擦除遠離 Hyperplane 起始點的部分，確保不影響其他線段的結構。</li>
+                                        </ul>
+                                    
+                                        <p class="fs-6">4. 結果</p>
+                                        <p>最終，通過旋轉方向的判斷，保留了正確的 Voronoi 線段，並刪除了與 Hyperplane 不符的部分，生成了正確的 Voronoi 圖結構。</p>
+                                    </li>
+                                    
                         
 
                                     <li class="list-group-item">
                                         <p class="fs-5 fw-bold">清理孤立線段</p>
-                                        <p>在合併過程中，可能出現孤立的 Voronoi 線段（例如，兩端都無法與其他線段相連的線段）。</p>
-                                        <p>將這些孤立線段刪除，保證合併後的 Voronoi Diagram 正確無誤。</p>
+                                        <p>在合併過程中，可能出現孤立的 Voronoi 線段。這些線段的特徵為：</p>
+                                        <ul class="ms-4">
+                                            <li>兩個端點的連接數均小於或等於 2。</li>
+                                            <li>無法有效參與形成連通的 Voronoi 網絡結構。</li>
+                                        </ul>
+                                    
+                                    
+                                        <p class="fs-6">1. 定義孤立線段</p>
+                                        <p>孤立線段的特徵為：</p>
+                                        <ul class="ms-4">
+                                            <li>線段的兩個端點在所有 Voronoi 線段的端點集合中出現次數不超過 2。</li>
+                                            <li>這表明該線段的兩個端點均無法與其他線段形成有效的網絡拓撲結構。</li>
+                                        </ul><br>
+                                    
+                                        <p class="fs-6">2. 檢查所有線段</p>
+                                        <ol class="ms-4">
+                                            <li>構建所有線段的端點集合，統計每個端點的出現次數。</li>
+                                            <li>遍歷每條 Voronoi 線段，檢查其兩端點的出現次數：</li>
+                                            <ul>
+                                                <li>若兩個端點的出現次數均小於或等於 2，則該線段被標記為孤立線段。</li>
+                                            </ul>
+                                        </ol><br>
+                                    
+                                        <p class="fs-6">3. 刪除孤立線段</p>
+                                        <ol class="ms-4">
+                                            <li>對於被判定為孤立的線段，從 Voronoi 線段集合中移除。</li>
+                                            <li>在畫布上刪除該線段的繪製。</li>
+                                        </ol><br>
+                                    
+                                        <p class="fs-6">4. 結果</p>
+                                        <p>通過清理孤立線段，保證合併後的 Voronoi Diagram 僅包含有效且連續的線段，形成正確的網絡結構。</p>
                                     </li>
-                        
+                                    
 
                                     <li class="list-group-item">
                                         <p class="fs-5 fw-bold">整合結果</p>
-                                        <p>最終的合併結果包括：</p>
-                                        <ul>
-                                            <li>左右兩部分的 Voronoi Diagram。</li>
-                                            <li>新計算出的垂直平分線。</li>
+                                        <p>在完成 Hyperplane 和 Voronoi 線段的生成及清理後，進行最終的整合操作，以構建正確且完整的 Voronoi Diagram。</p>
+                                    
+                                        <p class="fs-6">1. 合併 Hyperplane 和 Voronoi 線段</p>
+                                        <ul class="ms-4">
+                                            <li>將所有 Hyperplane 線段（例如，上下公切線的延伸段和中間生成的 Hyperplane）加入線段集合。</li>
+                                            <li>將清理過的 Voronoi 線段集合合併到最終線段集合中。</li>
+                                            <li>避免重複線段的加入：檢查線段的起點和終點是否已存在於集合中。</li>
+                                        </ul><br>
+                                    
+                                        <p class="fs-6">2. 重繪畫布</p>
+                                        <p>在整合完所有有效線段後，對畫布進行更新：</p>
+                                        <ol class="ms-4">
+                                            <li>刪除畫布上所有孤立線段和多餘的 Hyperplane。</li>
+                                            <li>繪製整合後的所有有效 Voronoi 線段，標記為最終結果。</li>
+                                        </ol><br>
+                                    
+                                        <p class="fs-6">3. 確保邊界完整性</p>
+                                        <p>由於部分 Hyperplane 和 Voronoi 線段可能在畫布邊界處被裁剪，需進行以下操作：</p>
+                                        <ul class="ms-4">
+                                            <li>檢查所有線段的起點和終點是否在畫布邊界內。</li>
+                                            <li>若線段在邊界外，進行邊界裁剪，保留有效部分。</li>
+                                            <li>更新線段集合中的起點和終點信息，並重新繪製。</li>
+                                        </ul><br>
+                                    
+                                        <p class="fs-6">4. 結果</p>
+                                        <p>最終整合結果為：</p>
+                                        <ul class="ms-4">
+                                            <li>包含所有有效的 Voronoi 線段。</li>
+                                            <li>由 Hyperplane 延伸構成的補充線段。</li>
+                                            <li>正確裁剪後的畫布邊界線段。</li>
                                         </ul>
-                                        <p>整合後形成完整的 Voronoi Diagram，覆蓋所有輸入的點。</p>
+                                        <p>這些結果共同構成完整且正確的 Voronoi Diagram。</p>
                                     </li>
+                                    
                                 </ol>
                             </div>
-                        
-                            <!-- Visual Flow Section -->
-                            <p class="fs-5 mt-4">視覺化流程</p>
-                            <ul class="list-group">
-                                <li class="list-group-item">分割為左右兩部分，各自生成 Voronoi Diagram。</li>
-                                <li class="list-group-item">找到上下公切線，作為兩部分的初步連接。</li>
-                                <li class="list-group-item">逐步修剪與延伸，形成完整的合併結果。</li>
-                            </ul>
-                        
-                            <div class="row mt-3">
-                                <div class="col-md-4 text-center">
-                                    <img src="./static/imgs/voronoi-divide-step.png" alt="Step 1" class="img-fluid rounded">
-                                    <p class="mt-2">分割步驟</p>
-                                </div>
-                                <div class="col-md-4 text-center">
-                                    <img src="./static/imgs/voronoi-merge-step.png" alt="Step 2" class="img-fluid rounded">
-                                    <p class="mt-2">合併步驟</p>
-                                </div>
-                                <div class="col-md-4 text-center">
-                                    <img src="./static/imgs/voronoi-final-result.png" alt="Step 3" class="img-fluid rounded">
-                                    <p class="mt-2">完整結果</p>
-                                </div>
-                            </div>
                         </div>
-                        
-
-
                 </div>
 
             <hr>
@@ -466,6 +557,44 @@
                 必須列出程式可以執行之範例數據（最好列出程式可以執行之極限數據）。
                 如果有些情況無法執行，請列出可能原因及可能解決之道。並請提供測試時之「測試輸入檔」與「測試輸出檔」。
             </p>
+
+
+
+            
+            <table class="table table-bordered">
+                <tr>
+                    <th>項目</th>
+                    <th>說明</th>
+                </tr>
+                <tr>
+                    <td>程式語言</td>
+                    <td>Python</td>
+                </tr>
+                <tr>
+                    <td>編譯器</td>
+                    <td>Python 3.11.4</td>
+                </tr>
+                <tr>
+                    <td>相依套件</td>
+                    <td>
+                        <ul>
+                            <li>tkinter</li>
+                            <li>math</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>編譯方式</td>
+                    <td>
+                        <ul>
+                            <li>安裝pyinstaller套件</li>
+                            <li>執行指令: pyinstaller --onefile --windowed [檔案名稱]</li>
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+
+
             <hr>
         </div>
 
